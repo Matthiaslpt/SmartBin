@@ -1,0 +1,26 @@
+{
+    "bins": [
+        {
+            "lat": 45.760,
+            "lng": 4.850,
+            "address": "10 Rue de Lyon, Lyon",
+            "trash_level": 65,
+            "history": [
+                {"time": "08:00", "level": 50},
+                {"time": "12:00", "level": 65},
+                {"time": "18:00", "level": 80}
+            ]
+        },
+        {
+            "lat": 45.745,
+            "lng": 4.870,
+            "address": "25 Avenue des Frères, Lyon",
+            "trash_level": 80,
+            "history": [
+                {"time": "08:00", "level": 60},
+                {"time": "12:00", "level": 75},
+                {"time": "18:00", "level": 90}
+            ]
+        }
+    ]
+}
