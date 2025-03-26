@@ -1,21 +1,43 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
+/* Styles pour le header et la navigation */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
+header h1 {
+    margin: 0;
+}
+
+/* Style pour le bouton */
+.btn-database {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-database:hover {
+    background-color: #45a049;
+}
+
+/* Style pour le conteneur principal */
+.container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Style pour la carte */
 #map {
-    height: 500px;
-    width: 80%;
-    margin: auto;
-    border: 2px solid black;
-}
-
-#info {
-    margin-top: 20px;
-    font-size: 18px;
-}
-
-canvas {
-    max-width: 80%;
-    margin: auto;
+    height: calc(100vh - 80px);
+    width: 100%;
 }

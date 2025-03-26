@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
+    // Configuration de la carte
     var map = L.map('map').setView([45.75, 4.85], 13);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -12,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
         popupAnchor: [0, -32]
     });
 
+    // Charger les données pour la carte
     fetch('data.json')
         .then(response => response.json())
         .then(data => {
@@ -21,5 +23,8 @@ document.addEventListener("DOMContentLoaded", function() {
                                   <b>Trash Level:</b> ${bin.trash_level}%<br>
                                   <a href='bin.html?id=${btoa(bin.address)}'>View Details</a>`);
             });
+        })
+        .catch(error => {
+            console.error("Erreur lors du chargement des données de la carte:", error);
         });
 });
