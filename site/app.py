@@ -1,17 +1,27 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 import psycopg2
-import os
+from cryptography.fernet import Fernet
 
 app = Flask(__name__)
 CORS(app)  # Allows JavaScript to call API
+
+# Charger la clé
+with open("secret.key", "rb") as key_file:
+    key = key_file.read()
+cipher = Fernet(key)
+# Lire et déchiffrer
+with open("passwords.txt", "rb") as f:
+    psswd_c = f.read()
+psswd_d = cipher.decrypt(psswd_c).decode()
+
 
 # Database connection function
 def get_db_connection():
     return psycopg2.connect(
         dbname="smartbin",
         user="your_pg_user",
-        password="your_pg_password",
+        password=psswd_d,
         host="localhost",
         port="5432"
     )
