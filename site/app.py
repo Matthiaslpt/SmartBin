@@ -32,12 +32,12 @@ def get_bins():
 def get_bin(bin_id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, address, lat, lng, trash_level FROM bins WHERE id = %s;", (bin_id,))
+    cur.execute("SELECT * FROM bins WHERE id = %s;", (bin_id,))
     row = cur.fetchone()
     cur.close()
     conn.close()
     if row:
-        return jsonify({"id": row[0], "address": row[1], "lat": row[2], "lng": row[3], "trash_level": row[4]})
+        return jsonify({"id": row[0], "address": row[1], "lat": row[2], "lng": row[3], "trash_level": row[4], "history": row[5]})
     return jsonify({"error": "Bin not found"}), 404
 
 # Run Flask app
