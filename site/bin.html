@@ -11,37 +11,7 @@
     <div id="bin-info"></div>
     <canvas id="chart"></canvas>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const params = new URLSearchParams(window.location.search);
-            const binId = atob(params.get('id'));
-            
-            fetch('data.json')
-                .then(response => response.json())
-                .then(data => {
-                    const bin = data.bins.find(b => b.address === binId);
-                    if (bin) {
-                        document.getElementById('bin-info').innerHTML = `
-                            <p><b>Address:</b> ${bin.address}</p>
-                            <p><b>Current Trash Level:</b> ${bin.trash_level}%</p>
-                        `;
-                        
-                        const ctx = document.getElementById('chart').getContext('2d');
-                        new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: bin.history.map(h => h.time),
-                                datasets: [{
-                                    label: 'Trash Level Over Time',
-                                    data: bin.history.map(h => h.level),
-                                    borderColor: 'blue',
-                                    fill: false
-                                }]
-                            }
-                        });
-                    }
-                });
-        });
-    </script>
+    <!-- Link to external bin.js -->
+    <script src="bin.js"></script>
 </body>
 </html>
