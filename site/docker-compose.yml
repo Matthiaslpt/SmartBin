@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: smartbin_db
+    environment:
+      POSTGRES_USER: your_pg_user
+      POSTGRES_PASSWORD: your_pg_password
+      POSTGRES_DB: smartbin
+    ports:
+      - "5432:5432"
+    networks:
+      - smartbin-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: smartbin_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: your_email@example.com
+      PGADMIN_DEFAULT_PASSWORD: your_pgadmin_password
+    ports:
+      - "8080:80"  # Expose pgAdmin on port 8080
+    networks:
+      - smartbin-network
+
+networks:
+  smartbin-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
