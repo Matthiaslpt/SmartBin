@@ -8,7 +8,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 // Custom bin icon
 const binIcon = L.icon({
-    iconUrl: "icons/bin-icon.png",
+    iconUrl: "../icons/bin-icon.png",
     iconSize: [40, 40],
     iconAnchor: [16, 32],
     popupAnchor: [0, -30],
