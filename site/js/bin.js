@@ -12,27 +12,32 @@ document.addEventListener("DOMContentLoaded", function () {
       return response.json();
     })
     .then((bin) => {
-      if (bin && bin.id && bin.address && bin.trash_level !== undefined) {
-        // Display bin details
+      if (bin && bin.id) {
+        // Display bin info
         document.getElementById("bin-info").innerHTML = `
-          <p><b>Address:</b> ${bin.address}</p>
-          <p><b>Current Trash Level:</b> ${bin.trash_level}%</p>
+          <p><b>ID de la poubelle:</b> ${bin.id}</p>
+          ${bin.address ? `<p><b>Adresse:</b> ${bin.address}</p>` : ""}
+          ${
+            bin.trash_level !== undefined
+              ? `<p><b>Current level:</b> ${bin.trash_level}%</p>`
+              : ""
+          }
         `;
 
         // Display the history chart
-        if (bin.history && Object.keys(bin.history).length > 0) {
-          const historyKeys = Object.keys(bin.history);
-          const historyValues = Object.values(bin.history);
+        if (bin.history && bin.history.length > 0) {
+          const dates = bin.history.map((entry) => entry.date);
+          const levels = bin.history.map((entry) => entry.level);
 
           const ctx = document.getElementById("chart").getContext("2d");
           new Chart(ctx, {
             type: "line",
             data: {
-              labels: historyKeys.map((key) => new Date(key).toLocaleString()),
+              labels: dates,
               datasets: [
                 {
-                  label: "Trash Level Over Time",
-                  data: historyValues,
+                  label: "Bin level history",
+                  data: levels,
                   borderColor: "blue",
                   backgroundColor: "rgba(0, 0, 255, 0.1)",
                   fill: true,
@@ -51,13 +56,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 x: {
                   title: {
                     display: true,
-                    text: "Time",
+                    text: "Date",
                   },
                 },
                 y: {
                   title: {
                     display: true,
-                    text: "Trash Level (%)",
+                    text: "Bin level (%)",
                   },
                   min: 0,
                   max: 100,
@@ -65,6 +70,13 @@ document.addEventListener("DOMContentLoaded", function () {
               },
             },
           });
+        } else {
+          document
+            .getElementById("chart")
+            .insertAdjacentHTML(
+              "beforebegin",
+              "<p>No history available for instance.</p>"
+            );
         }
       } else {
         document.getElementById("bin-info").innerHTML = `<p>Bin not found.</p>`;
@@ -74,73 +86,6 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Error fetching bin data:", error);
       document.getElementById(
         "bin-info"
-      ).innerHTML = `<p>There was an error loading the bin data.</p>`;
-    });
-
-  // Handle reset trash level
-  document
-    .getElementById("reset-trash-level")
-    .addEventListener("click", function () {
-      fetch(`http://127.0.0.1:5000/bins/${binId}/reset`, {
-        method: "POST",
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Failed to reset trash level");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          alert("Trash level reset successfully!");
-          // Update the chart with the new history
-          const historyKeys = Object.keys(data.history);
-          const historyValues = Object.values(data.history);
-
-          const ctx = document.getElementById("chart").getContext("2d");
-          new Chart(ctx, {
-            type: "line",
-            data: {
-              labels: historyKeys.map((key) => new Date(key).toLocaleString()),
-              datasets: [
-                {
-                  label: "Trash Level Over Time",
-                  data: historyValues,
-                  borderColor: "blue",
-                  backgroundColor: "rgba(0, 0, 255, 0.1)",
-                  fill: true,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: {
-                  display: true,
-                  position: "top",
-                },
-              },
-              scales: {
-                x: {
-                  title: {
-                    display: true,
-                    text: "Time",
-                  },
-                },
-                y: {
-                  title: {
-                    display: true,
-                    text: "Trash Level (%)",
-                  },
-                  min: 0,
-                  max: 100,
-                },
-              },
-            },
-          });
-        })
-        .catch((error) => {
-          console.error("Error resetting trash level:", error);
-          alert("Failed to reset trash level. Please try again.");
-        });
+      ).innerHTML = `<p>Error while loading data.</p>`;
     });
 });

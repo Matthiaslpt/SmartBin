@@ -44,13 +44,22 @@ def get_bins():
 def get_bin(bin_id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM bins WHERE id = %s;", (bin_id,))
-    row = cur.fetchone()
+    # Query bins_history for the given bin ID
+    cur.execute("SELECT level, date FROM history WHERE id = %s ORDER BY date;", (bin_id,))
+    history_rows = cur.fetchall()
     cur.close()
     conn.close()
-    if row:
-        return jsonify({"id": row[0], "address": row[1], "lat": row[2], "lng": row[3], "trash_level": row[4], "history": row[5]})
-    return jsonify({"error": "Bin not found"}), 404
+
+    if not history_rows:
+        return jsonify({"error": "Bin not found"}), 404
+
+    # Format result as a list of {level, date}
+    history = [{"level": level, "date": date.strftime('%Y-%m-%d')} for level, date in history_rows]
+
+    return jsonify({
+        "id": bin_id,
+        "history": history
+    })
 
 # Endpoint: Add a new bin
 @app.route('/bins', methods=['POST'])
@@ -87,37 +96,6 @@ def add_bin():
         cur.close()
         conn.close()
 
-# Endpoint: Reset trash level
-@app.route('/bins/<int:bin_id>/reset', methods=['POST'])
-def reset_trash_level(bin_id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    try:
-        # Fetch the current history
-        cur.execute("SELECT history FROM bins WHERE id = %s;", (bin_id,))
-        row = cur.fetchone()
-        if not row:
-            return jsonify({"error": "Bin not found"}), 404
-
-        history = json.loads(row[0]) if row[0] else {}
-
-        # Add the reset event to the history
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        history[timestamp] = 0
-
-        # Update the trash level and history in the database
-        cur.execute(
-            "UPDATE bins SET trash_level = 0, history = %s WHERE id = %s;",
-            (json.dumps(history), bin_id)
-        )
-        conn.commit()
-        return jsonify({"message": "Trash level reset successfully", "history": history}), 200
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()
 
 # Run Flask app
 if __name__ == '__main__':
