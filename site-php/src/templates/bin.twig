@@ -1,0 +1,135 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}Détails de la Poubelle{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block head_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container fade-in">
+        <h1>Données de la poubelle</h1>
+        
+        <div id="bin-info" class="fade-in">
+            {% if error is defined %}
+                <p>{{ error }}</p>
+            {% else %}
+                <p><strong>ID de la poubelle:</strong> {{ bin.id }}</p>
+                {% if bin.address is defined %}
+                    <p><strong>Adresse:</strong> {{ bin.address }}</p>
+                {% endif %}
+                {% if bin.trash_level is defined %}
+                    <p>
+                        <strong>Niveau actuel:</strong> 
+                        <span class="{{ bin.trash_level > 80 ? 'warning' : '' }}">
+                            {{ bin.trash_level }}%
+                        </span>
+                    </p>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if error is not defined and bin.history|length > 0 %}
+            <canvas id="chart" width="400" height="200" class="fade-in"></canvas>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(() => {
+                        const ctx = document.getElementById('chart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: {{ bin.history|map(h => h.date)|json_encode|raw }},
+                                datasets: [{
+                                    label: 'Historique du niveau de remplissage',
+                                    data: {{ bin.history|map(h => h.level)|json_encode|raw }},
+                                    borderColor: "#4caf50",
+                                    backgroundColor: "rgba(76, 175, 80, 0.2)",
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.3
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top',
+                                        labels: {
+                                            font: {
+                                                family: 'Roboto',
+                                                size: 14
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                        titleFont: {
+                                            family: 'Roboto',
+                                            size: 14
+                                        },
+                                        bodyFont: {
+                                            family: 'Roboto',
+                                            size: 14
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Date',
+                                            font: {
+                                                family: 'Roboto',
+                                                size: 14
+                                            }
+                                        },
+                                        grid: {
+                                            display: false
+                                        }
+                                    },
+                                    y: {
+                                        title: {
+                                            display: true,
+                                            text: 'Niveau de remplissage (%)',
+                                            font: {
+                                                family: 'Roboto',
+                                                size: 14
+                                            }
+                                        },
+                                        min: 0,
+                                        max: 100,
+                                        ticks: {
+                                            stepSize: 20
+                                        }
+                                    }
+                                },
+                                animation: {
+                                    duration: 1000,
+                                    easing: 'easeOutQuart'
+                                }
+                            }
+                        });
+                    }, 300);
+                });
+            </script>
+        {% elseif error is not defined %}
+            <p class="fade-in">Aucun historique disponible pour cette poubelle.</p>
+        {% endif %}
+
+        <div class="button-container">
+            <a href="/" class="back-link">Retour à la carte</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartBin - Lyon</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+  </head>
+  <body>
+    <div class="logo-container">
+      <a href="about.html" title="À propos de SmartBin">
+        <img src="../icons/logo.png" alt="SmartBin Logo" class="logo" />
+      </a>
+    </div>
+
+    <div class="search-wrapper">
+      <div class="search-icon-container">
+        <img
+          src="../icons/recherche.png"
+          alt="Rechercher"
+          class="search-icon"
+        />
+      </div>
+      <div class="search-container">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Rechercher une adresse ou un ID de poubelle..."
+        />
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <footer class="about-footer">
+      <a href="about.html">À propos du projet SmartBin</a>
+    </footer>
+
+    <script src="../js/script.js"></script>
+  </body>
+</html>

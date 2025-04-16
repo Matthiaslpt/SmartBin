@@ -1,2 +1,56 @@
-secret.key
-docker-compose.yml
+# Fichiers d'environnement et secrets
+.env
+site-python/*.key
+secure/
+
+# Fichiers et dossiers de dépendances
+site-php/vendor/
+/node_modules/
+
+# Fichiers de cache
+/src/cache/
+*.cache
+
+# Fichiers de logs
+/logs/
+*.log
+
+# Fichiers de base de données
+*.sqlite
+*.sql
+*.db
+/docker/postgres/data/
+
+# Fichiers de configuration IDE
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*.swo
+/temp/
+
+# Fichiers de build/compilés
+/dist/
+/build/
+
+# Fichiers de composer
+composer.phar
+
+# Fichiers Docker spécifiques
+.dockerignore
+docker-compose.override.yml
+
+# Fichiers de session PHP
+/sessions/
+
+# Fichiers d'upload non-versionés
+/uploads/

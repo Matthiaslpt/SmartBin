@@ -1,0 +1,35 @@
+{% extends "layouts/base.twig" %}
+
+{% block title %}SmartBin - Lyon{% endblock %}
+
+{% block head_scripts %}
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+    <div class="logo-container">
+        <a href="/about" title="À propos de SmartBin">
+            <img src="/icons/logo.png" alt="SmartBin Logo" class="logo" />
+        </a>
+    </div>
+
+    <div class="search-wrapper">
+        <div class="search-icon-container">
+            <img src="/icons/recherche.png" alt="Rechercher" class="search-icon" />
+        </div>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Rechercher une adresse ou un ID de poubelle..." />
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <footer class="about-footer">
+        <a href="/about">À propos du projet SmartBin</a>
+    </footer>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/js/script.js"></script>
+{% endblock %}

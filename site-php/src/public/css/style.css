@@ -1,0 +1,266 @@
+:root {
+  --primary-color: #4caf50;
+  --secondary-color: #2e7d32;
+  --text-color: #333;
+  --bg-color: #f9f9f9;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+  height: 100vh;
+}
+
+#map {
+  height: 100vh;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+
+.logo-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  animation: logoAppear 0.8s ease-out forwards;
+}
+
+.logo {
+  height: 115px; 
+  display: block;
+}
+
+@keyframes logoAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+
+.search-wrapper {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse; 
+}
+
+.search-icon-container {
+  background-color: transparent;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 11;
+  transition: var(--transition);
+}
+
+.search-icon {
+  width: 50px;
+  height: 50px;
+}
+
+.search-container {
+  width: 0;
+  overflow: hidden;
+  transition: var(--transition);
+  margin-right: 10px;
+}
+
+/* Afficher la barre de recherche au survol de l'icône */
+.search-wrapper:hover .search-container,
+.search-container:focus-within {
+  width: 300px;
+}
+
+#search-input {
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 30px;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow);
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+#search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-color);
+  background-color: white;
+}
+
+.popup-content {
+  text-align: center;
+  padding: 5px;
+}
+
+.popup-content h3 {
+  margin-bottom: 8px;
+  color: var(--primary-color);
+}
+
+.popup-content p {
+  margin: 5px 0;
+}
+
+.popup-content a {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 15px;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 20px;
+  transition: var(--transition);
+}
+
+.popup-content a:hover {
+  background-color: var(--secondary-color);
+}
+
+.container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+#bin-info {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  text-align: left;
+}
+
+#bin-info p {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+canvas {
+  max-width: 100%;
+  margin: 20px auto;
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 20px;
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Style pour l'icône pulse */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* Style pour le niveau d'alerte */
+.warning {
+  color: red;
+  font-weight: bold;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+.back-link,
+.back-btn {
+  display: inline-block;
+  padding: 10px 25px;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 30px;
+  font-weight: 500;
+  text-align: center;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.back-link:hover,
+.back-btn:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
