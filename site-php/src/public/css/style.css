@@ -30,7 +30,6 @@ body {
   z-index: 1;
 }
 
-
 .logo-container {
   position: absolute;
   top: 20px;
@@ -45,7 +44,7 @@ body {
 }
 
 .logo {
-  height: 115px; 
+  height: 115px;
   display: block;
 }
 
@@ -65,7 +64,6 @@ body {
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
-
 .search-wrapper {
   position: absolute;
   top: 20px;
@@ -73,7 +71,7 @@ body {
   z-index: 10;
   display: flex;
   align-items: center;
-  flex-direction: row-reverse; 
+  flex-direction: row-reverse;
 }
 
 .search-icon-container {
@@ -263,4 +261,28 @@ canvas {
   background-color: var(--secondary-color);
   transform: translateY(-3px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Règles pour les marqueurs sur la carte */
+.leaflet-marker-icon {
+  position: absolute !important; /* Force l'utilisation du positionnement absolu de leaflet */
+}
+
+/* Style spécifique pour le marqueur de la poubelle ID 4 si nécessaire */
+.bin-marker-4 {
+  z-index: 1000 !important; /* Augmenter le z-index pour s'assurer qu'il est visible */
+}
+
+/* Ajoutez ceci à votre fichier CSS */
+.leaflet-marker-pane {
+  z-index: 600 !important; /* Force tous les marqueurs à avoir un z-index élevé */
+}
+
+.leaflet-marker-icon {
+  position: absolute !important; /* Garantit que tous les marqueurs utilisent le positionnement absolu */
+  transform-origin: center bottom !important; /* Assure que les transformations sont appliquées depuis le bas du marqueur */
+}
+
+.leaflet-popup-pane {
+  z-index: 700 !important; /* S'assure que les popups sont au-dessus des marqueurs */
 }

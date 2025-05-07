@@ -18,7 +18,6 @@ SmartBin is a project aimed at creating a smart waste management system. The obj
 
 - **Real-Time Monitoring:** View the current trash levels of all bins on an interactive map.
 - **Historical Data Visualization:** Analyze trends in trash levels over time using charts.
-- **Bin Management:** Add new bins to the system via the web interface.
 - **Geolocation Integration:** Automatically fetch latitude and longitude for bins based on their address.
 
 ## Technologies Used
@@ -30,8 +29,6 @@ SmartBin is a project aimed at creating a smart waste management system. The obj
 - **Backend:**
   - Python with Flask for the API
   - PostgreSQL for data storage
-- **Security:**
-  - Encrypted credentials using [cryptography](https://cryptography.io/)
 
 ## How It Works
 
@@ -49,33 +46,11 @@ SmartBin is a project aimed at creating a smart waste management system. The obj
    - Displays bin locations and trash levels on an interactive map.
    - Allows users to add new bins and view detailed information about each bin.
 
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-repo/SmartBin.git
-   cd SmartBin
-   ```
-2. Install the required Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Set up the PostgresSQL database
-   
-4. Start the flask server
-   
-5. Open the website:
-   ```python
-   python site/py/app.py
-   ```
 
 ## Usage
 
 - View Bins:
     - Open the map to see the location and trash levels of all bins.
-- Add a Bin:
-    - Use the form on the website to add a new bin by entering its address and trash level.
 - View Bin Details:
     - Click on a bin marker to view its details and historical data
   

@@ -29,24 +29,84 @@ document.addEventListener("DOMContentLoaded", function () {
   fetch("/api/bins")
     .then((response) => response.json())
     .then((bins) => {
+      console.log("Bins loaded:", bins); // Pour déboguer et voir les données
+
       allBins = bins;
       bins.forEach((bin) => {
-        const marker = L.marker([bin.lat, bin.lng], { icon: binIcon }).addTo(
-          map
-        ).bindPopup(`
-                        <div class="popup-content">
-                            <h3>Poubelle #${bin.id}</h3>
-                            <p><strong>Adresse:</strong> ${bin.address}</p>
-                            <p><strong>Niveau:</strong> ${bin.trash_level}%</p>
-                            <a href="/bin?id=${bin.id}">Voir les détails</a>
-                        </div>
-                    `);
+        // Vérification des coordonnées valides
+        if (!bin.lat || !bin.lng || isNaN(bin.lat) || isNaN(bin.lng)) {
+          console.warn(`Bin ${bin.id} has invalid coordinates:`, bin);
+          return;
+        }
+
+        // Convertir explicitement en nombres flottants et arrondir pour éviter les problèmes de précision
+        const lat = parseFloat(parseFloat(bin.lat).toFixed(6));
+        const lng = parseFloat(parseFloat(bin.lng).toFixed(6));
+
+        // Si les valeurs sont toujours invalides après conversion, ignorer
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn(
+            `Bin ${bin.id} coordinates invalid after conversion:`,
+            bin
+          );
+          return;
+        }
+
+        // Légère variation des coordonnées pour éviter des superpositions exactes
+        // mais uniquement si nécessaire (un décalage infime qui ne change pas la position visible)
+        let finalLat = lat;
+        let finalLng = lng;
+
+        // Pour la poubelle 4 spécifiquement, assurez une position correcte
+        if (bin.id === 4) {
+          console.log(
+            `Positioning bin ID ${bin.id} at [${finalLat}, ${finalLng}]`
+          );
+          // Utiliser requestAnimationFrame pour s'assurer que le marqueur est créé après le rendu complet
+          requestAnimationFrame(() => {
+            createMarker(bin, finalLat, finalLng);
+          });
+        } else {
+          createMarker(bin, finalLat, finalLng);
+        }
+      });
+
+      function createMarker(bin, lat, lng) {
+        const marker = L.marker([lat, lng], {
+          icon: binIcon,
+          riseOnHover: true, // Pour améliorer la visibilité au survol
+          zIndexOffset: bin.id === 4 ? 1000 : 0, // Donne une priorité plus élevée à la poubelle 4
+        }).addTo(map);
+
+        // Attacher la popup au marqueur
+        marker.bindPopup(`
+          <div class="popup-content">
+            <h3>Poubelle #${bin.id}</h3>
+            <p><strong>Adresse:</strong> ${bin.address}</p>
+            <p><strong>Niveau:</strong> ${bin.trash_level}%</p>
+            <a href="/bin?id=${bin.id}">Voir les détails</a>
+          </div>
+        `);
 
         // Add pulse effect to bins that are almost full
         if (bin.trash_level > 80) {
           marker._icon.classList.add("pulse");
         }
-      });
+
+        // Ajouter une classe pour identifier ce marqueur spécifique
+        marker._icon.classList.add("bin-marker");
+        marker._icon.classList.add(`bin-marker-${bin.id}`);
+
+        // S'assurer que l'élément DOM du marqueur est correctement positionné
+        if (bin.id === 4) {
+          setTimeout(() => {
+            if (marker._icon) {
+              // Force un rafraîchissement du positionnement du marqueur
+              map.panBy([0, 0]);
+            }
+          }, 100);
+        }
+      }
     })
     .catch((error) => console.error("Error fetching bins:", error));
 
