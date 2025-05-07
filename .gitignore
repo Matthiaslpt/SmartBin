@@ -54,3 +54,5 @@ docker-compose.override.yml
 
 # Fichiers d'upload non-versionés
 /uploads/
+
+composer.lock
