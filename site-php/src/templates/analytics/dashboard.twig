@@ -1,0 +1,241 @@
+{# filepath: /home/matthias/Documents/Cours/CPE/4A/SmartBin/site-php/src/templates/analytics/dashboard.twig #}
+{% extends "layouts/base.twig" %}
+
+{% block title %}Tableau de bord analytique SmartBin{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/css/analytics.css">
+{% endblock %}
+
+{% block head_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="analytics-header">
+        <h1>Tableau de bord SmartBin</h1>
+        <p>Analyse et optimisation de la collecte des déchets</p>
+    </div>
+    
+    <div class="analytics-summary">
+        <div class="summary-card">
+            <h3>Poubelles à collecter</h3>
+            <div class="summary-number">{{ binsNeedingCollection|length }}</div>
+            <a href="/analytics/route" class="action-button">Voir l'itinéraire optimisé</a>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Niveau moyen</h3>
+            <div class="summary-number">
+                {% set totalLevel = 0 %}
+                {% for rate in averageFillRates %}
+                    {% set totalLevel = totalLevel + rate.avg_level %}
+                {% endfor %}
+                {{ (totalLevel / averageFillRates|length)|round }}%
+            </div>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Poubelles critiques</h3>
+            <div class="summary-number">
+                {% set critical = 0 %}
+                {% for bin in predictedCriticalLevels %}
+                    {% if bin.days_until_critical is not null and bin.days_until_critical <= 2 %}
+                        {% set critical = critical + 1 %}
+                    {% endif %}
+                {% endfor %}
+                {{ critical }}
+            </div>
+        </div>
+    </div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <h2>Poubelles à collecter</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Adresse</th>
+                            <th>Niveau actuel</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bin in binsNeedingCollection %}
+                            <tr>
+                                <td>{{ bin.id }}</td>
+                                <td>{{ bin.address }}</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: {{ bin.trash_level }}%; background-color: {{ bin.trash_level > 80 ? '#ff4d4d' : '#4caf50' }}"></div>
+                                        <span>{{ bin.trash_level }}%</span>
+                                    </div>
+                                </td>
+                                <td><a href="/bin?id={{ bin.id }}" class="details-link">Détails</a></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="no-data">Aucune poubelle à collecter actuellement</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="analytics-card">
+            <h2>Carte des poubelles à collecter</h2>
+            <div id="collection-map" class="map-container"></div>
+        </div>
+    </div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <h2>Prévision des niveaux critiques</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Adresse</th>
+                            <th>Niveau actuel</th>
+                            <th>Jours restants</th>
+                            <th>Date critique</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bin in predictedCriticalLevels %}
+                            {% if bin.days_until_critical is not null %}
+                                <tr class="{{ bin.days_until_critical <= 2 ? 'urgent' : '' }}">
+                                    <td>{{ bin.id }}</td>
+                                    <td>{{ bin.address }}</td>
+                                    <td>{{ bin.current_level }}%</td>
+                                    <td>{{ bin.days_until_critical }}</td>
+                                    <td>{{ bin.critical_date }}</td>
+                                </tr>
+                            {% endif %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="no-data">Aucune prédiction disponible</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="analytics-card">
+            <h2>Taux moyen de remplissage</h2>
+            <canvas id="average-fill-chart"></canvas>
+        </div>
+    </div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card full-width">
+            <h2>Taux de croissance quotidien</h2>
+            <canvas id="growth-rate-chart"></canvas>
+        </div>
+    </div>
+    
+    <div class="button-container">
+        <a href="/" class="back-btn">Retour à la carte principale</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Carte des poubelles à collecter
+    const collectionMap = L.map('collection-map').setView([45.75, 4.85], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(collectionMap);
+    
+    // Définir l'icône personnalisée
+    const binIcon = L.icon({
+        iconUrl: '/icons/bin-icon.png',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40]
+    });
+    
+    // Ajouter les marqueurs des poubelles à collecter
+    {% for bin in binsNeedingCollection %}
+        L.marker([{{ bin.lat }}, {{ bin.lng }}], { icon: binIcon })
+            .addTo(collectionMap)
+            .bindPopup(`
+                <div class="popup-content">
+                    <h3>Poubelle #{{ bin.id }}</h3>
+                    <p><strong>Adresse:</strong> {{ bin.address }}</p>
+                    <p><strong>Niveau:</strong> {{ bin.trash_level }}%</p>
+                    <a href="/bin?id={{ bin.id }}">Voir les détails</a>
+                </div>
+            `);
+    {% endfor %}
+    
+    // Graphique du taux moyen de remplissage
+    const avgCtx = document.getElementById('average-fill-chart').getContext('2d');
+    new Chart(avgCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for rate in averageFillRates|slice(0, 10) %}'Poubelle #{{ rate.id }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Taux moyen de remplissage (%)',
+                data: [{% for rate in averageFillRates|slice(0, 10) %}{{ rate.avg_level|round }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                backgroundColor: [{% for rate in averageFillRates|slice(0, 10) %}'rgba(76, 175, 80, 0.6)'{% if not loop.last %}, {% endif %}{% endfor %}],
+                borderColor: [{% for rate in averageFillRates|slice(0, 10) %}'rgba(76, 175, 80, 1)'{% if not loop.last %}, {% endif %}{% endfor %}],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+    
+    // Graphique du taux de croissance quotidien
+    const growthCtx = document.getElementById('growth-rate-chart').getContext('2d');
+    const growthLabels = [{% for rate in fillRateGrowth %}'Poubelle #{{ rate.id }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const growthData = [{% for rate in fillRateGrowth %}{{ (rate.avg_daily_growth * 100)|round(2) }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    const growthColors = growthData.map(value => 
+        value > 30 ? 'rgba(255, 77, 77, 0.6)' : 
+        value > 20 ? 'rgba(255, 177, 66, 0.6)' : 
+        'rgba(76, 175, 80, 0.6)'
+    );
+    const growthBorders = growthColors.map(color => color.replace('0.6', '1'));
+    
+    new Chart(growthCtx, {
+        type: 'bar',
+        data: {
+            labels: growthLabels,
+            datasets: [{
+                label: 'Croissance quotidienne du niveau (%)',
+                data: growthData,
+                backgroundColor: growthColors,
+                borderColor: growthBorders,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

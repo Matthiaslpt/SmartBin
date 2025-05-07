@@ -1,5 +1,7 @@
 {% extends "layouts/base.twig" %}
 
+{% block body_class %}homepage{% endblock %}
+
 {% block title %}SmartBin - Lyon{% endblock %}
 
 {% block head_scripts %}
@@ -21,6 +23,13 @@
         <div class="search-container">
             <input type="text" id="search-input" placeholder="Rechercher une adresse ou un ID de poubelle..." />
         </div>
+    </div>
+    
+    <div class="analytics-button">
+        <a href="/analytics" title="Tableau de bord analytique">
+            <img src="/icons/analytics.png" alt="Analyse" class="analytics-icon" />
+            <span>Tableau de bord</span>
+        </a>
     </div>
 
     <div id="map"></div>

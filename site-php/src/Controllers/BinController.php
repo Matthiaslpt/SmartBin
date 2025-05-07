@@ -1,8 +1,8 @@
 <?php
 
-namespace SmartBin\controllers;
+namespace SmartBin\Controllers;
 
-use SmartBin\models\BinModel;
+use SmartBin\Models\BinModel;
 use Twig\Environment;
 
 class BinController

@@ -1,0 +1,286 @@
+body {
+  overflow: auto !important;
+  height: auto !important;
+}
+
+/* Styles de base pour le tableau de bord analytique */
+.analytics-container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.analytics-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.analytics-header h1 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.analytics-header p {
+  color: #666;
+}
+
+.analytics-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  flex: 1;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  text-align: center;
+  margin: 0 10px;
+}
+
+.summary-card h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.summary-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 10px 0;
+}
+
+.action-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.action-button:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+.analytics-grid {
+  display: flex;
+  margin-bottom: 30px;
+}
+
+.analytics-card {
+  flex: 1;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin: 0 10px;
+}
+
+.analytics-card.full-width {
+  flex: 2;
+}
+
+.analytics-card h2 {
+  color: var(--secondary-color);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th {
+  background-color: #f5f5f5;
+  padding: 12px;
+  text-align: left;
+  font-weight: 500;
+  color: #333;
+}
+
+table td {
+  padding: 12px;
+  border-top: 1px solid #eee;
+}
+
+tr.urgent td {
+  background-color: rgba(255, 77, 77, 0.1);
+  font-weight: 500;
+}
+
+.details-link {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 15px;
+  text-decoration: none;
+  font-size: 12px;
+  transition: var(--transition);
+}
+
+.details-link:hover {
+  background-color: var(--secondary-color);
+}
+
+.progress-bar {
+  position: relative;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: var(--primary-color);
+}
+
+.progress-bar span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.map-container {
+  height: 400px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.route-map-container {
+  height: 500px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.no-data {
+  text-align: center;
+  color: #888;
+  padding: 30px 0;
+}
+
+canvas {
+  width: 100% !important;
+  max-height: 300px;
+}
+
+.instructions-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.route-instructions {
+  list-style-type: none;
+  padding: 0;
+}
+
+.instruction-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+
+.instruction-icon {
+  width: 30px;
+  height: 30px;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.instruction-text {
+  flex: 1;
+}
+
+.instruction-distance {
+  color: #666;
+  margin-left: 10px;
+}
+
+.error-message {
+  color: #ff4d4d;
+  padding: 20px;
+  background-color: rgba(255, 77, 77, 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.info-message {
+  color: #4c75af;
+  padding: 20px;
+  background-color: rgba(76, 117, 175, 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Ajouter à la fin du fichier */
+.waste-center-marker {
+  border: 3px solid #9c27b0 !important;
+  box-shadow: 0 0 10px rgba(156, 39, 176, 0.5);
+}
+
+.waste-center-notice {
+  background-color: #9c27b0;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: inline-block;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+/* Style pour les étapes de l'itinéraire qui impliquent des déchetteries */
+tr.waste-center-row {
+  background-color: rgba(156, 39, 176, 0.1);
+}
+
+tr.waste-center-row td {
+  font-weight: bold;
+}
+
+/* Style pour les appareils mobiles */
+@media (max-width: 768px) {
+  .analytics-summary,
+  .analytics-grid {
+    flex-direction: column;
+  }
+
+  .summary-card,
+  .analytics-card {
+    margin: 10px 0;
+  }
+}

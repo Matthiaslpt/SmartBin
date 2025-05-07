@@ -1,6 +1,6 @@
 <?php
 
-namespace SmartBin\controllers;
+namespace SmartBin\Controllers;
 
 use Twig\Environment;
 

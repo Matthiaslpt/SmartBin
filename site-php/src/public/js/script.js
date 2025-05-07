@@ -1,18 +1,36 @@
 // Initialize the map
 document.addEventListener("DOMContentLoaded", function () {
-  const map = L.map("map", { zoomControl: false }).setView([45.75, 4.85], 13);
+  // Définir les limites géographiques de la France 
+  const southWest = L.latLng(41.2, -5.5); 
+  const northEast = L.latLng(51.2, 9.8); 
+  const franceBounds = L.latLngBounds(southWest, northEast);
 
-  // Add zoom control to the bottom right
+  // Initialiser la carte avec les restrictions
+  const map = L.map("map", {
+    zoomControl: false,
+    minZoom: 6, 
+    maxZoom: 18, 
+    maxBounds: franceBounds, 
+    maxBoundsViscosity: 1.0, 
+  }).setView([45.75, 4.85], 13);
+
+  // Ajouter le contrôle de zoom en bas à droite
   L.control
     .zoom({
       position: "bottomright",
     })
     .addTo(map);
 
-  // Add OpenStreetMap tiles
+  // Ajouter les tuiles OpenStreetMap
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",
+    bounds: franceBounds, // Appliquer également les limites aux tuiles
   }).addTo(map);
+
+  // Empêcher le dépassement des limites lors du déplacement
+  map.on("drag", function () {
+    map.panInsideBounds(franceBounds, { animate: false });
+  });
 
   // Custom bin icon
   const binIcon = L.icon({
@@ -27,7 +45,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Fetch bins from API
   fetch("/api/bins")
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .catch((error) => {
+      console.error("Error fetching bins:", error);
+      return [];
+    })
     .then((bins) => {
       console.log("Bins loaded:", bins); // Pour déboguer et voir les données
 

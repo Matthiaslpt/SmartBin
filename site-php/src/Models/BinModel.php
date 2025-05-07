@@ -1,9 +1,9 @@
 <?php
 
-namespace SmartBin\models;
+namespace SmartBin\Models;
 
 use PDO;
-use SmartBin\services\DatabaseService;
+use SmartBin\Services\DatabaseService;
 
 class BinModel
 {

@@ -4,7 +4,6 @@ namespace SmartBin\Config;
 
 class Config
 {
-    // Configuration de la base de données
     public static function getDatabaseConfig(): array
     {
         return [

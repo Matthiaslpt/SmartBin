@@ -1,0 +1,248 @@
+{# filepath: /home/matthias/Documents/Cours/CPE/4A/SmartBin/site-php/src/templates/analytics/route.twig #}
+{% extends "layouts/base.twig" %}
+
+{% block title %}Itinéraire de collecte optimisé{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/css/analytics.css">
+{% endblock %}
+
+{% block head_scripts %}
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="analytics-header">
+        <h1>Itinéraire de collecte optimisé</h1>
+        <p>Parcours recommandé pour la collecte des poubelles</p>
+    </div>
+    
+    <div class="analytics-summary">
+        <div class="summary-card">
+            <h3>Poubelles à collecter</h3>
+            <div class="summary-number">{{ route|length }}</div>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Distance totale</h3>
+            <div class="summary-number" id="total-distance">Calcul...</div>
+        </div>
+        
+        <div class="summary-card">
+            <h3>Temps estimé</h3>
+            <div class="summary-number" id="total-time">Calcul...</div>
+        </div>
+    </div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card full-width">
+            <h2>Carte d'itinéraire</h2>
+            <div id="route-map" class="route-map-container"></div>
+        </div>
+    </div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <h2>Détail de l'itinéraire</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étape</th>
+                            <th>Type</th>
+                            <th>Adresse</th>
+                            <th>Information</th>
+                        </tr>
+                    </thead>
+                    <tbody id="route-details">
+                        {% for point in route %}
+                            <tr class="{% if point.is_waste_center is defined and point.is_waste_center %}waste-center-row{% endif %}">
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    {% if point.is_waste_center is defined and point.is_waste_center %}
+                                        <strong>Déchetterie</strong>
+                                    {% else %}
+                                        Poubelle #{{ point.id }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ point.address }}</td>
+                                <td>
+                                    {% if point.is_waste_center is defined and point.is_waste_center %}
+                                        {{ point.name }}
+                                        {% if loop.first %}
+                                            (Départ)
+                                        {% else %}
+                                            (Arrivée)
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="progress-bar">
+                                            <div class="progress" style="width: {{ point.trash_level }}%; background-color: {{ point.trash_level > 80 ? '#ff4d4d' : '#4caf50' }}"></div>
+                                            <span>{{ point.trash_level }}%</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="no-data">Aucune poubelle à collecter</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="analytics-card">
+            <h2>Instructions de navigation</h2>
+            <div class="instructions-container" id="route-instructions">
+                Chargement des instructions...
+            </div>
+        </div>
+    </div>
+    
+    <div class="button-container">
+        <a href="/analytics" class="back-btn">Retour au tableau de bord</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser la carte
+    const routeMap = L.map('route-map', {
+        minZoom: 6,
+        maxZoom: 18
+    }).setView([45.75, 4.85], 13);
+    
+    // Définir les limites géographiques de la France
+    const southWest = L.latLng(41.2, -5.5);
+    const northEast = L.latLng(51.2, 9.8);
+    const franceBounds = L.latLngBounds(southWest, northEast);
+    
+    // Appliquer les limites à la carte
+    routeMap.setMaxBounds(franceBounds);
+    routeMap.on('drag', function() {
+        routeMap.panInsideBounds(franceBounds, { animate: false });
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        bounds: franceBounds
+    }).addTo(routeMap);
+    
+    // Définir des icônes personnalisées
+    const binIcon = L.icon({
+        iconUrl: '/icons/bin-icon.png',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40]
+    });
+    
+    const wasteCenterIcon = L.icon({
+        iconUrl: '/icons/waste-center-icon.png',
+        iconSize: [50, 50],
+        iconAnchor: [25, 50],
+        popupAnchor: [0, -50]
+    });
+    
+    // Préparer les waypoints pour l'itinéraire
+    const waypoints = [];
+    let binMarker;
+    const markers = [];
+    
+    {% for point in route %}
+        waypoints.push(L.latLng({{ point.lat }}, {{ point.lng }}));
+        
+        // Ajouter un marqueur différent selon le type de point
+        {% if point.is_waste_center is defined and point.is_waste_center %}
+            binMarker = L.marker([{{ point.lat }}, {{ point.lng }}], {
+                icon: wasteCenterIcon,
+                title: '{{ point.name }} - Point de départ et d\'arrivée'
+            }).addTo(routeMap);
+            
+            binMarker.bindPopup(`
+                <div class="popup-content">
+                    <h3>{{ point.name }}</h3>
+                    <p><strong>Adresse:</strong> {{ point.address }}</p>
+                    <p class="waste-center-notice">Point de départ et d'arrivée</p>
+                </div>
+            `);
+        {% else %}
+            binMarker = L.marker([{{ point.lat }}, {{ point.lng }}], {
+                icon: binIcon,
+                title: 'Étape {{ loop.index - (loop.first ? 1 : 0) }} - Poubelle #{{ point.id }}'
+            }).addTo(routeMap);
+            
+            binMarker.bindPopup(`
+                <div class="popup-content">
+                    <h3>Étape {{ loop.index - (loop.first ? 1 : 0) }} - Poubelle #{{ point.id }}</h3>
+                    <p><strong>Adresse:</strong> {{ point.address }}</p>
+                    <p><strong>Niveau:</strong> {{ point.trash_level }}%</p>
+                    <a href="/bin?id={{ point.id }}">Voir les détails</a>
+                </div>
+            `);
+        {% endif %}
+        
+        markers.push(binMarker);
+    {% endfor %}
+    
+    // Créer l'itinéraire si nous avons au moins deux points
+    if (waypoints.length >= 2) {
+        const routing = L.Routing.control({
+            waypoints: waypoints,
+            routeWhileDragging: false,
+            showAlternatives: false,
+            fitSelectedRoutes: true,
+            lineOptions: {
+                styles: [{color: '#4caf50', opacity: 0.8, weight: 5}]
+            },
+            createMarker: function() { return null; }, // Ne pas créer de marqueurs supplémentaires
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1'
+            })
+        }).addTo(routeMap);
+        
+        routing.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            
+            // Mettre à jour les statistiques
+            document.getElementById('total-distance').innerText = (summary.totalDistance / 1000).toFixed(2) + ' km';
+            document.getElementById('total-time').innerText = Math.round(summary.totalTime / 60) + ' min';
+            
+            // Mettre à jour les instructions
+            let instructionsHtml = '<ol class="route-instructions">';
+            routes[0].instructions.forEach(function(instruction) {
+                instructionsHtml += `
+                    <li class="instruction-item">
+                        <span class="instruction-icon">${instruction.type}</span>
+                        <span class="instruction-text">${instruction.text}</span>
+                        <span class="instruction-distance">${(instruction.distance / 1000).toFixed(2)} km</span>
+                    </li>
+                `;
+            });
+            instructionsHtml += '</ol>';
+            document.getElementById('route-instructions').innerHTML = instructionsHtml;
+        });
+        
+        // Si l'itinéraire ne peut pas être trouvé
+        routing.on('routingerror', function() {
+            document.getElementById('total-distance').innerText = 'Erreur';
+            document.getElementById('total-time').innerText = 'Erreur';
+            document.getElementById('route-instructions').innerHTML = 
+                '<div class="error-message">Impossible de calculer l\'itinéraire. Veuillez vérifier les adresses.</div>';
+        });
+    } else {
+        document.getElementById('total-distance').innerText = 'N/A';
+        document.getElementById('total-time').innerText = 'N/A';
+        document.getElementById('route-instructions').innerHTML = 
+            '<div class="info-message">Au moins deux poubelles sont nécessaires pour générer un itinéraire.</div>';
+    }
+});
+</script>
+{% endblock %}

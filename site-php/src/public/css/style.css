@@ -286,3 +286,38 @@ canvas {
 .leaflet-popup-pane {
   z-index: 700 !important; /* S'assure que les popups sont au-dessus des marqueurs */
 }
+
+/* Ajouter à la fin de /home/matthias/Documents/Cours/CPE/4A/SmartBin/site-php/src/public/css/style.css */
+.analytics-button {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background-color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.analytics-button a {
+  display: flex;
+  align-items: center;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.analytics-button img {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.analytics-button:hover {
+  transform: translateX(-50%) translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}

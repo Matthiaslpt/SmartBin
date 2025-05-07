@@ -19,25 +19,26 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 // Router
 switch ($uri) {
+    // Routes existantes
     case '/':
     case '/index':
     case '/index.php':
-        $controller = new \SmartBin\controllers\HomeController($twig);
+        $controller = new \SmartBin\Controllers\HomeController($twig);
         $controller->index();
         break;
     
     case '/about':
-        $controller = new \SmartBin\controllers\HomeController($twig);
+        $controller = new \SmartBin\Controllers\HomeController($twig);
         $controller->about();
         break;
     
     case '/bin':
-        $controller = new \SmartBin\controllers\BinController($twig);
+        $controller = new \SmartBin\Controllers\BinController($twig);
         $controller->show($_GET['id'] ?? null);
         break;
     
     case '/api/bins':
-        $controller = new \SmartBin\controllers\BinController($twig);
+        $controller = new \SmartBin\Controllers\BinController($twig);
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $controller->getAllBins();
         } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -47,8 +48,45 @@ switch ($uri) {
     
     case (preg_match('/^\/api\/bins\/(\d+)$/', $uri, $matches) ? true : false):
         $binId = $matches[1];
-        $controller = new \SmartBin\controllers\BinController($twig);
+        $controller = new \SmartBin\Controllers\BinController($twig);
         $controller->getBinById($binId);
+        break;
+    
+    // Nouvelles routes pour l'analyse
+    case '/analytics':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->dashboard();
+        break;
+        
+    case '/analytics/route':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->collectionRoute();
+        break;
+    
+    // Nouvelles routes API pour l'analyse
+    case '/api/analytics/fill-rates':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getAverageFillRatesApi();
+        break;
+        
+    case '/api/analytics/bins-to-collect':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getBinsNeedingCollectionApi();
+        break;
+        
+    case '/api/analytics/growth-rates':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getFillRateGrowthApi();
+        break;
+        
+    case '/api/analytics/predictions':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getPredictionsApi();
+        break;
+        
+    case '/api/analytics/route':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getOptimizedRouteApi();
         break;
     
     default:
