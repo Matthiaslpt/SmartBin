@@ -84,25 +84,13 @@ document.addEventListener("DOMContentLoaded", function () {
         let finalLat = lat;
         let finalLng = lng;
 
-        // Pour la poubelle 4 spécifiquement, assurez une position correcte
-        if (bin.id === 4) {
-          console.log(
-            `Positioning bin ID ${bin.id} at [${finalLat}, ${finalLng}]`
-          );
-          // Utiliser requestAnimationFrame pour s'assurer que le marqueur est créé après le rendu complet
-          requestAnimationFrame(() => {
-            createMarker(bin, finalLat, finalLng);
-          });
-        } else {
-          createMarker(bin, finalLat, finalLng);
-        }
+        createMarker(bin, finalLat, finalLng);
       });
 
       function createMarker(bin, lat, lng) {
         const marker = L.marker([lat, lng], {
           icon: binIcon,
           riseOnHover: true, // Pour améliorer la visibilité au survol
-          zIndexOffset: bin.id === 4 ? 1000 : 0, // Donne une priorité plus élevée à la poubelle 4
         }).addTo(map);
 
         // Attacher la popup au marqueur
@@ -114,11 +102,6 @@ document.addEventListener("DOMContentLoaded", function () {
             <a href="/bin?id=${bin.id}">Voir les détails</a>
           </div>
         `);
-
-        // Add pulse effect to bins that are almost full
-        if (bin.trash_level > 80) {
-          marker._icon.classList.add("pulse");
-        }
 
         // Ajouter une classe pour identifier ce marqueur spécifique
         marker._icon.classList.add("bin-marker");
