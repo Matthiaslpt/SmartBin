@@ -206,8 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Graphique du taux de croissance quotidien
     const growthCtx = document.getElementById('growth-rate-chart').getContext('2d');
-    const growthLabels = [{% for rate in fillRateGrowth %}'Poubelle #{{ rate.id }}'{% if not loop.last %}, {% endif %}{% endfor %}];
-    const growthData = [{% for rate in fillRateGrowth %}{{ (rate.avg_daily_growth * 100)|round(2) }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    const growthLabels = [{% for id, rate in fillRateGrowth %}'Poubelle #{{ rate.bin_number }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const growthData = [{% for id, rate in fillRateGrowth %}{{ (rate.avg_daily_growth * 100)|round(2) }}{% if not loop.last %}, {% endif %}{% endfor %}];
     const growthColors = growthData.map(value => 
         value > 30 ? 'rgba(255, 77, 77, 0.6)' : 
         value > 20 ? 'rgba(255, 177, 66, 0.6)' : 

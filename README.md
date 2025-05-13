@@ -1,61 +1,102 @@
 # SmartBin
 
-## Description
+![SmartBin Logo](site-php/src/public/icons/logo.png)
 
-SmartBin is a project aimed at creating a smart waste management system. The objective is to design an electronic component capable of measuring the trash levels of multiple bins across a city. The collected data is then centralized and displayed on a website, providing real-time insights into the waste levels of each bin.
+## À propos de SmartBin
 
-## Objectives
+SmartBin est une solution innovante de gestion intelligente des déchets urbains développée par des étudiants de CPE Lyon. Notre plateforme permet de surveiller en temps réel le niveau de remplissage des poubelles dans la ville de Lyon, améliorant ainsi l'efficacité de la collecte des déchets et contribuant à un environnement urbain plus propre.
 
-- Develop an electronic component to measure the trash level in bins.
-- Deploy the component across multiple bins in a city.
-- Gather and store the data in a centralized database.
-- Create a web application to visualize the data, including:
-  - A map showing the location of each bin.
-  - Real-time trash levels for each bin.
-  - Historical data for trash levels over time.
+## Fonctionnalités Principales
 
-## Features
+- **Suivi en temps réel** - Visualisez le niveau de remplissage de chaque poubelle sur une carte interactive
+- **Recherche intelligente** - Recherchez une poubelle par son identifiant ou par adresse
+- **Historique des données** - Accédez à l'historique de remplissage pour chaque poubelle
+- **Alertes de niveau** - Identification visuelle des poubelles qui nécessitent une attention immédiate
+- **Tableau de bord analytique** - Statistiques globales sur le réseau de poubelles
+- **Prédiction de remplissage** - Estimation des dates critiques pour optimiser les collectes
+- **Itinéraires optimisés** - Calcul du parcours optimal pour la collecte des poubelles
 
-- **Real-Time Monitoring:** View the current trash levels of all bins on an interactive map.
-- **Historical Data Visualization:** Analyze trends in trash levels over time using charts.
-- **Geolocation Integration:** Automatically fetch latitude and longitude for bins based on their address.
+## Technologies Utilisées
 
-## Technologies Used
+### Backend
+- **PHP** - Architecture MVC pour l'API RESTful
+- **Twig** - Système de templating pour les vues
+- **PostgreSQL** - Base de données relationnelle pour le stockage des données
 
-- **Frontend:**
-  - HTML, CSS, JavaScript
-  - [Leaflet.js](https://leafletjs.com/) for interactive maps
-  - [Chart.js](https://www.chartjs.org/) for data visualization
-- **Backend:**
-  - Python with Flask for the API
-  - PostgreSQL for data storage
+### Frontend
+- **HTML/CSS/JavaScript** - Interface utilisateur responsive
+- **Leaflet.js** - Bibliothèque pour l'affichage des cartes interactives
+- **Chart.js** - Visualisation dynamique des données historiques
 
-## How It Works
+### Infrastructure
+- **Docker** et **Docker Compose** - Conteneurisation des services
+- **Nginx** - Serveur web haute performance
 
-1. **Electronic Component:**
+## Installation
 
-   - Measures the trash level in bins using sensors.
-   - Sends the data to the backend server.
+### Prérequis
+- Docker et Docker Compose installés sur votre système
+- PHP 8.0 ou supérieur (pour le développement local)
+- Composer (gestionnaire de dépendances PHP)
 
-2. **Backend Server:**
+### Étapes d'installation
 
-   - Stores bin data (location, trash level, history) in a PostgreSQL database.
-   - Provides RESTful APIs to fetch and update bin data.
+1. Cloner le dépôt
+   ```bash
+   git clone https://github.com/votre-compte/smartbin.git
+   cd smartbin
+2. Installer les dépendances
+```bash
+cd site-php
+composer install
+```
 
-3. **Frontend Website:**
-   - Displays bin locations and trash levels on an interactive map.
-   - Allows users to add new bins and view detailed information about each bin.
+3. Configuration 
+
+```bash
+cp .env.example .env
+# Modifier les variables d'environnement selon votre configuration
+```
+
+4. Lancer les conteneurs Docker
 
 
-## Usage
+```bash
+docker-compose up -d
+```
 
-- View Bins:
-    - Open the map to see the location and trash levels of all bins.
-- View Bin Details:
-    - Click on a bin marker to view its details and historical data
-  
-## Future Enhancements
+5. Accéder à l'application
 
-- Add notifications for bins that are nearly full.
-- Integrate machine learning to predict trash levels based on historical data.
-- Expand the system to support multiple cities.
+- Interface web : http://localhost:8080
+- Administration de la base de données : http://localhost:5050
+
+Commandes utiles
+
+Pour mettre à jour les niveaux des poubelles avec les données les plus récentes :
+```bash 
+php src/Commands/SyncBinLevels.php
+```
+
+## Notre Équipe
+
+SmartBin a été développé dans le cadre d'un projet étudiant à CPE Lyon par une équipe de développeurs passionnés et engagés pour l'environnement.
+
+- **Lapointe Matthias** - Étudiant 4A - CPE Lyon
+- **Ta Jonathan** - Étudiant 4A - CPE Lyon
+- **Vincent Corentin** - Étudiant 4A - CPE Lyon
+- **Thouvenel Romain** - Étudiant 4A - CPE Lyon
+- **Voye Jean Baptiste** - Étudiant 4A - CPE Lyon
+- **Piccinali Jeanne** - Étudiante 4A - CPE Lyon
+- **Zory Leo** - Étudiant 4A - CPE Lyon
+
+## Objectifs Futurs
+
+- **Capteurs IoT** - Intégration de capteurs connectés pour des mesures en temps réel
+- **Application mobile** - Interface dédiée pour les utilisateurs et équipes de collecte
+- **Algorithmes prédictifs avancés** - Amélioration des modèles d'estimation du remplissage
+- **Extension géographique** - Déploiement du système dans d'autres villes et régions
+
+
+## Licence
+
+Ce projet est développé dans un cadre éducatif à CPE Lyon. Tous droits réservés.

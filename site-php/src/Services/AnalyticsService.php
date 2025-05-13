@@ -53,33 +53,99 @@ class AnalyticsService
      */
     public function getFillRateGrowth(): array
     {
-        $stmt = $this->db->query("
-            WITH rate_changes AS (
-                SELECT 
-                    h1.id,
-                    h1.date,
-                    h1.level,
-                    h2.level as prev_level,
-                    h2.date as prev_date,
-                    (h1.level - h2.level) as level_change,
-                    (h1.date - h2.date) as days_diff
-                FROM history h1
-                JOIN history h2 ON h1.id = h2.id AND h2.date = (
-                    SELECT MAX(h3.date) 
-                    FROM history h3 
-                    WHERE h3.id = h1.id AND h3.date < h1.date
-                )
-            )
-            SELECT 
-                b.id, 
-                b.address,
-                AVG(rc.level_change / GREATEST(rc.days_diff, 1)) as avg_daily_growth
-            FROM bins b
-            JOIN rate_changes rc ON b.id = rc.id
-            GROUP BY b.id, b.address
-            ORDER BY avg_daily_growth DESC
-        ");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Récupérer toutes les poubelles
+        $stmt = $this->db->query("SELECT id, address FROM bins");
+        $bins = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // D'abord, vérifions la structure de la table history pour trouver la colonne de date
+        $columns = $this->db->query("
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'history'
+        ")->fetchAll(PDO::FETCH_COLUMN);
+        
+        // Cherchons un nom de colonne qui pourrait correspondre à une date/heure
+        $dateColumn = null;
+        foreach ($columns as $column) {
+            if (strpos($column, 'date') !== false || 
+                strpos($column, 'time') !== false || 
+                $column === 'created_at' || 
+                $column === 'updated_at' || 
+                $column === 'timestamp') {
+                $dateColumn = $column;
+                break;
+            }
+        }
+        
+        if (!$dateColumn) {
+            // Si aucune colonne de date n'est trouvée, utilisons la première colonne comme solution temporaire
+            $dateColumn = $columns[0] ?? 'id'; // Éviter les erreurs si la table est vide
+        }
+        
+        $growthData = [];
+        foreach ($bins as $bin) {
+            // Récupérer l'historique des niveaux pour cette poubelle avec la colonne de date correcte
+            $stmt = $this->db->prepare("
+                SELECT level as fill_level, {$dateColumn} as timestamp 
+                FROM history 
+                WHERE id = ? 
+                ORDER BY {$dateColumn} ASC 
+                LIMIT 14
+            ");
+            $stmt->execute([$bin['id']]);
+            $readings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (count($readings) > 1) {
+                $dailyGrowth = [];
+                $prevReading = null;
+                $validGrowthValues = []; // Pour calculer la moyenne sans les vidages
+                
+                foreach ($readings as $reading) {
+                    if ($prevReading) {
+                        $diff = $reading['fill_level'] - $prevReading['fill_level'];
+                        $timeDiff = (strtotime($reading['timestamp']) - strtotime($prevReading['timestamp'])) / 86400; // Différence en jours
+                        
+                        // Si la différence est fortement négative (par exemple moins de -20%), on considère que c'est un vidage
+                        if ($diff < -20) {
+                            // On ignore cette baisse dans le calcul de croissance car c'est un vidage
+                            $dailyGrowth[] = [
+                                'date' => date('Y-m-d', strtotime($reading['timestamp'])),
+                                'growth' => $diff / ($timeDiff > 0 ? $timeDiff : 1), // Pour l'affichage
+                                'is_collection' => true // Marquer qu'il s'agit d'un vidage
+                            ];
+                        } else {
+                            // Calcul normal du taux de croissance
+                            $growth = $timeDiff > 0 ? $diff / $timeDiff : 0;
+                            $dailyGrowth[] = [
+                                'date' => date('Y-m-d', strtotime($reading['timestamp'])),
+                                'growth' => $growth,
+                                'is_collection' => false
+                            ];
+                            
+                            // N'ajouter à la moyenne que les valeurs de croissance positives
+                            if ($growth > 0) {
+                                $validGrowthValues[] = $growth;
+                            }
+                        }
+                    }
+                    $prevReading = $reading;
+                }
+                
+                // Calculer la croissance moyenne en excluant les vidages et les valeurs négatives
+                $avgDailyGrowth = !empty($validGrowthValues) ? 
+                    array_sum($validGrowthValues) / count($validGrowthValues) : 0;
+                
+                $growthData[$bin['id']] = [
+                    'bin_id' => $bin['id'],
+                    'bin_address' => $bin['address'],
+                    'bin_number' => $bin['id'], // Ajout du numéro de la poubelle
+                    'daily_growth' => $dailyGrowth,
+                    'avg_daily_growth' => $avgDailyGrowth
+                ];
+            }
+        }
+        
+        return $growthData;
     }
 
     /**
@@ -96,17 +162,24 @@ class AnalyticsService
         foreach ($bins as $bin) {
             $binGrowth = 0;
             foreach ($fillRates as $rate) {
-                if ($rate['id'] == $bin['id']) {
+                if ($rate['bin_id'] == $bin['id']) {
                     $binGrowth = $rate['avg_daily_growth'];
                     break;
                 }
             }
             
-            // Si le taux de croissance est positif, calculer les jours restants
-            if ($binGrowth > 0) {
-                $currentLevel = $bin['trash_level'];
+            $currentLevel = $bin['trash_level'];
+            
+            // Si le taux de croissance est positif et le niveau n'est pas encore critique
+            if ($binGrowth > 0 && $currentLevel < $criticalLevel) {
                 $daysUntilCritical = ($criticalLevel - $currentLevel) / $binGrowth;
-                $criticalDate = date('Y-m-d', strtotime("+{$daysUntilCritical} days"));
+                // Limiter les prévisions à un an maximum
+                if ($daysUntilCritical > 365) {
+                    $daysUntilCritical = 365;
+                }
+                // Assurons-nous que la date est correctement formatée
+                $daysToAdd = (int)ceil($daysUntilCritical);
+                $criticalDate = date('Y-m-d', strtotime("+{$daysToAdd} days"));
                 
                 $results[] = [
                     'id' => $bin['id'],
@@ -115,12 +188,23 @@ class AnalyticsService
                     'days_until_critical' => ceil($daysUntilCritical),
                     'critical_date' => $criticalDate
                 ];
-            } else {
-                // Si le taux de croissance n'est pas positif, la poubelle n'atteindra pas le niveau critique
+            } 
+            // Si le niveau est déjà critique
+            else if ($currentLevel >= $criticalLevel) {
                 $results[] = [
                     'id' => $bin['id'],
                     'address' => $bin['address'],
-                    'current_level' => $bin['trash_level'],
+                    'current_level' => $currentLevel,
+                    'days_until_critical' => 0,
+                    'critical_date' => date('Y-m-d') // Aujourd'hui
+                ];
+            }
+            // Si le taux de croissance n'est pas positif
+            else {
+                $results[] = [
+                    'id' => $bin['id'],
+                    'address' => $bin['address'],
+                    'current_level' => $currentLevel,
                     'days_until_critical' => null,
                     'critical_date' => null
                 ];
@@ -149,10 +233,10 @@ class AnalyticsService
 
     /**
      * Trouve la déchetterie la plus proche d'une liste de poubelles
-     * @param array $bins Liste des poubelles à collecter
+     * @param array $bins Liste des poubelles
      * @return array|null La déchetterie la plus proche ou null si aucune déchetterie
      */
-    public function getNearestWasteCenter(array $bins): ?array
+    private function getNearestWasteCenter(array $bins): ?array
     {
         if (empty($bins)) {
             return null;
@@ -165,6 +249,7 @@ class AnalyticsService
             $totalLat += $bin['lat'];
             $totalLng += $bin['lng'];
         }
+        
         $centerLat = $totalLat / count($bins);
         $centerLng = $totalLng / count($bins);
         
@@ -174,9 +259,9 @@ class AnalyticsService
             return null;
         }
         
-        // Trouver la déchetterie la plus proche du centre de toutes les poubelles
-        $nearestCenter = null;
+        // Trouver la déchetterie la plus proche du centre
         $minDistance = PHP_FLOAT_MAX;
+        $nearestCenter = null;
         
         foreach ($wasteCenters as $center) {
             $distance = $this->calculateDistance(
