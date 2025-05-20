@@ -175,10 +175,14 @@ tr.urgent td {
 }
 
 .route-map-container {
-  height: 500px;
+  height: 70vh; /* Utiliser une hauteur relative à la taille de la fenêtre */
+  min-height: 600px;
   width: 100%;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
 }
 
 .no-data {
@@ -270,6 +274,66 @@ tr.waste-center-row {
 
 tr.waste-center-row td {
   font-weight: bold;
+}
+
+/* Masquer le conteneur d'instructions de Leaflet Routing Machine */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+/* Assurer que l'icône du panneau d'instructions est également masquée */
+.leaflet-routing-collapse-btn {
+  display: none !important;
+}
+
+/* S'assurer que la carte prend tout l'espace disponible */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Améliorer l'apparence des marqueurs */
+.bin-marker-icon {
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s;
+}
+
+.bin-marker-icon:hover {
+  transform: scale(1.1);
+  z-index: 1000 !important;
+}
+
+.waste-center-marker-icon {
+  filter: drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.4));
+  transition: transform 0.2s;
+  z-index: 900 !important;
+}
+
+.waste-center-marker-icon:hover {
+  transform: scale(1.1);
+  z-index: 1000 !important;
+}
+
+/* Style pour les popups de la carte */
+.leaflet-popup-content {
+  min-width: 200px;
+  padding: 5px;
+}
+
+.leaflet-popup-content h3 {
+  margin-top: 0;
+  color: var(--primary-color);
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.leaflet-popup-content p {
+  margin: 8px 0;
+}
+
+/* Améliorer l'apparence du tracé de l'itinéraire */
+.leaflet-routing-line {
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 /* Style pour les appareils mobiles */

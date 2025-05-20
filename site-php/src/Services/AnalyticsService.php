@@ -67,20 +67,12 @@ class AnalyticsService
         // Cherchons un nom de colonne qui pourrait correspondre à une date/heure
         $dateColumn = null;
         foreach ($columns as $column) {
-            if (strpos($column, 'date') !== false || 
-                strpos($column, 'time') !== false || 
-                $column === 'created_at' || 
-                $column === 'updated_at' || 
-                $column === 'timestamp') {
+            if (strpos($column, 'date') !== false) {
                 $dateColumn = $column;
                 break;
             }
         }
         
-        if (!$dateColumn) {
-            // Si aucune colonne de date n'est trouvée, utilisons la première colonne comme solution temporaire
-            $dateColumn = $columns[0] ?? 'id'; // Éviter les erreurs si la table est vide
-        }
         
         $growthData = [];
         foreach ($bins as $bin) {

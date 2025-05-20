@@ -46,8 +46,8 @@
     </div>
     
     <div class="analytics-grid">
-        <div class="analytics-card">
-            <h2>Détail de l'itinéraire</h2>
+        <div class="analytics-card full-width">
+            <h2>Détail des points de collecte</h2>
             <div class="table-container">
                 <table>
                     <thead>
@@ -95,13 +95,6 @@
                 </table>
             </div>
         </div>
-        
-        <div class="analytics-card">
-            <h2>Instructions de navigation</h2>
-            <div class="instructions-container" id="route-instructions">
-                Chargement des instructions...
-            </div>
-        </div>
     </div>
     
     <div class="button-container">
@@ -135,19 +128,21 @@ document.addEventListener('DOMContentLoaded', function() {
         bounds: franceBounds
     }).addTo(routeMap);
     
-    // Définir des icônes personnalisées
+    // Définir des icônes personnalisées avec des tailles optimisées pour éviter de cacher des points
     const binIcon = L.icon({
         iconUrl: '/icons/bin-icon.png',
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -40]
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+        className: 'bin-marker-icon' // Permet de cibler avec du CSS
     });
     
     const wasteCenterIcon = L.icon({
         iconUrl: '/icons/waste-center-icon.png',
-        iconSize: [50, 50],
-        iconAnchor: [25, 50],
-        popupAnchor: [0, -50]
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40],
+        className: 'waste-center-marker-icon' // Permet de cibler avec du CSS
     });
     
     // Préparer les waypoints pour l'itinéraire
@@ -198,8 +193,16 @@ document.addEventListener('DOMContentLoaded', function() {
             routeWhileDragging: false,
             showAlternatives: false,
             fitSelectedRoutes: true,
+            show: false, // Masquer le conteneur d'instructions étape par étape
+            collapsible: true, // Permettre de réduire/agrandir le panneau si jamais il est visible
+            collapsed: true, // S'assurer qu'il est replié par défaut
             lineOptions: {
-                styles: [{color: '#4caf50', opacity: 0.8, weight: 5}]
+                styles: [
+                    {color: '#4caf50', opacity: 0.8, weight: 6},
+                    {color: 'white', opacity: 0.3, weight: 10}
+                ],
+                extendToWaypoints: true,
+                missingRouteTolerance: 10
             },
             createMarker: function() { return null; }, // Ne pas créer de marqueurs supplémentaires
             router: L.Routing.osrmv1({
@@ -215,33 +218,28 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('total-distance').innerText = (summary.totalDistance / 1000).toFixed(2) + ' km';
             document.getElementById('total-time').innerText = Math.round(summary.totalTime / 60) + ' min';
             
-            // Mettre à jour les instructions
-            let instructionsHtml = '<ol class="route-instructions">';
-            routes[0].instructions.forEach(function(instruction) {
-                instructionsHtml += `
-                    <li class="instruction-item">
-                        <span class="instruction-icon">${instruction.type}</span>
-                        <span class="instruction-text">${instruction.text}</span>
-                        <span class="instruction-distance">${(instruction.distance / 1000).toFixed(2)} km</span>
-                    </li>
-                `;
-            });
-            instructionsHtml += '</ol>';
-            document.getElementById('route-instructions').innerHTML = instructionsHtml;
+            // S'assurer que les éléments du panneau d'instructions sont bien supprimés
+            setTimeout(function() {
+                const routingContainer = document.querySelector('.leaflet-routing-container');
+                if (routingContainer) {
+                    routingContainer.style.display = 'none';
+                }
+                
+                const collapseBtn = document.querySelector('.leaflet-routing-collapse-btn');
+                if (collapseBtn) {
+                    collapseBtn.style.display = 'none';
+                }
+            }, 100);
         });
         
         // Si l'itinéraire ne peut pas être trouvé
         routing.on('routingerror', function() {
             document.getElementById('total-distance').innerText = 'Erreur';
             document.getElementById('total-time').innerText = 'Erreur';
-            document.getElementById('route-instructions').innerHTML = 
-                '<div class="error-message">Impossible de calculer l\'itinéraire. Veuillez vérifier les adresses.</div>';
         });
     } else {
         document.getElementById('total-distance').innerText = 'N/A';
         document.getElementById('total-time').innerText = 'N/A';
-        document.getElementById('route-instructions').innerHTML = 
-            '<div class="info-message">Au moins deux poubelles sont nécessaires pour générer un itinéraire.</div>';
     }
 });
 </script>
