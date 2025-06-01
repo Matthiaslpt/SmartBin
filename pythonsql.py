@@ -3,11 +3,12 @@ from psycopg2 import Error
 import datetime
 import serial
 import time
+from twilio.rest import Client
 
 
 
 print(r"""
-  _________                      __ ___.   .__        
+  _________                      __ ___     __        
  /   _____/ _____ _____ ________/  |\_ |__ |__| ____  
  \_____  \ /     \\__  \\_  __ \   __\ __ \|  |/    \ 
  /        \  Y Y  \/ __ \|  | \/|  | | \_\ \  |   |  \
@@ -106,6 +107,30 @@ def read_from_serial(port='/dev/ttyUSB0', baudrate=115200):
     except serial.SerialException as e:
         print(f"❌ Impossible d'ouvrir le port série : {e}")
 
+
+
+
+def send_sms_notification():
+    # Configuration de Twilio
+    # Remplacez par vos identifiants Twilio
+    account_sid = 'votre_account_sid'
+    auth_token = 'votre_auth_token'
+
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        body="⚠️ SmartBin : Température > 50°C détectée !",
+        from_='+1234567890',  # Numéro Twilio
+        to='+33612345678'     # Numéro cible
+    )
+
+    print("Message envoyé :", message.sid)
+
+
 # Lancer le script
 if __name__ == "__main__":
     read_from_serial()
+
+
+
+
