@@ -8,11 +8,67 @@
             color: red;
             font-weight: bold;
         }
+        
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-container > div {
+            width: 100%;
+        }
+        
+        .temperature-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid #ff7043;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .temperature-value {
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+        
+        .temperature-min {
+            color: #0288d1;
+        }
+        
+        .temperature-max {
+            color: #e53935;
+        }
+        
+        .temperature-current {
+            color: #fb8c00;
+            font-weight: bold;
+        }
+        
+        h3.section-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                flex-direction: row;
+            }
+            
+            .chart-container > div {
+                width: 48%;
+            }
+        }
     </style>
 {% endblock %}
 
 {% block head_scripts %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 {% endblock %}
 
 {% block content %}
@@ -35,16 +91,46 @@
                         </span>
                     </p>
                 {% endif %}
+                
+                {% if bin.temperature is defined and bin.temperature is not null %}
+                    <div class="temperature-info">
+                        <h3>Données de température</h3>
+                        <p class="temperature-value temperature-current"><i class="fas fa-thermometer-half"></i> Actuelle: {{ bin.temperature|round(1) }}°C</p>
+                        
+                        {% if bin.min_temperature is defined and bin.min_temperature is not null %}
+                            <p class="temperature-value temperature-min"><i class="fas fa-thermometer-empty"></i> Minimale: {{ bin.min_temperature|round(1) }}°C</p>
+                        {% endif %}
+                        
+                        {% if bin.max_temperature is defined and bin.max_temperature is not null %}
+                            <p class="temperature-value temperature-max"><i class="fas fa-thermometer-full"></i> Maximale: {{ bin.max_temperature|round(1) }}°C</p>
+                        {% endif %}
+                        
+                        {% if bin.max_temperature is defined and bin.min_temperature is defined and bin.max_temperature is not null and bin.min_temperature is not null %}
+                            <p class="temperature-value"><i class="fas fa-exchange-alt"></i> Amplitude: {{ (bin.max_temperature - bin.min_temperature)|round(1) }}°C</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endif %}
         </div>
 
         {% if error is not defined and bin.history|length > 0 %}
-            <canvas id="chart" width="400" height="200" class="fade-in"></canvas>
+            <h3 class="section-title">Historique des données</h3>
+            <div class="chart-container">
+                <div>
+                    <canvas id="levelChart" width="400" height="200" class="fade-in"></canvas>
+                </div>
+                {% if bin.history|filter(h => h.temperature is defined and h.temperature is not null)|length > 0 %}
+                <div>
+                    <canvas id="tempChart" width="400" height="200" class="fade-in"></canvas>
+                </div>
+                {% endif %}
+            </div>
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     setTimeout(() => {
-                        const ctx = document.getElementById('chart').getContext('2d');
-                        new Chart(ctx, {
+                        // Graphique du niveau de remplissage
+                        const ctxLevel = document.getElementById('levelChart').getContext('2d');
+                        new Chart(ctxLevel, {
                             type: 'line',
                             data: {
                                 labels: {{ bin.history|map(h => h.date)|json_encode|raw }},
@@ -121,6 +207,86 @@
                                 }
                             }
                         });
+                        
+                        {% if bin.history|filter(h => h.temperature is defined and h.temperature is not null)|length > 0 %}
+                        // Graphique de la température
+                        const ctxTemp = document.getElementById('tempChart').getContext('2d');
+                        new Chart(ctxTemp, {
+                            type: 'line',
+                            data: {
+                                labels: {{ bin.history|map(h => h.date)|json_encode|raw }},
+                                datasets: [{
+                                    label: 'Historique de la température',
+                                    data: {{ bin.history|map(h => h.temperature is defined ? h.temperature : null)|json_encode|raw }},
+                                    borderColor: "#ff7043",
+                                    backgroundColor: "rgba(255, 112, 67, 0.2)",
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.3
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        display: true,
+                                        position: 'top',
+                                        labels: {
+                                            font: {
+                                                family: 'Roboto',
+                                                size: 14
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                        titleFont: {
+                                            family: 'Roboto',
+                                            size: 14
+                                        },
+                                        bodyFont: {
+                                            family: 'Roboto',
+                                            size: 14
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Date',
+                                            font: {
+                                                family: 'Roboto',
+                                                size: 14
+                                            }
+                                        },
+                                        grid: {
+                                            display: false
+                                        }
+                                    },
+                                    y: {
+                                        title: {
+                                            display: true,
+                                            text: 'Température (°C)',
+                                            font: {
+                                                family: 'Roboto',
+                                                size: 14
+                                            }
+                                        },
+                                        ticks: {
+                                            stepSize: 5
+                                        }
+                                    }
+                                },
+                                animation: {
+                                    duration: 1000,
+                                    easing: 'easeOutQuart'
+                                }
+                            }
+                        });
+                        {% endif %}
                     }, 300);
                 });
             </script>

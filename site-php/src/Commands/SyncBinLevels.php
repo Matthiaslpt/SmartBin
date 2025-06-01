@@ -39,5 +39,7 @@ function syncBinLevels() {
     }
 }
 
-// Exécuter la synchronisation
-syncBinLevels();
+// Si le script est exécuté directement (et non inclus)
+if (basename($_SERVER['SCRIPT_FILENAME']) == basename(__FILE__)) {
+    syncBinLevels();
+}

@@ -21,10 +21,17 @@ class AnalyticsService
     public function getAverageFillRates(): array
     {
         $stmt = $this->db->query("
-            SELECT b.id, b.address, AVG(h.level) as avg_level
+            SELECT 
+                b.id, 
+                b.address, 
+                AVG(h.level) as avg_level,
+                AVG(h.temperature) as avg_temperature,
+                MAX(h.temperature) as max_temperature,
+                MIN(h.temperature) as min_temperature,
+                b.temperature as current_temperature
             FROM bins b
             JOIN history h ON b.id = h.id
-            GROUP BY b.id, b.address
+            GROUP BY b.id, b.address, b.temperature
             ORDER BY avg_level DESC
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -38,7 +45,7 @@ class AnalyticsService
     public function getBinsNeedingCollection(int $threshold = 70): array
     {
         $stmt = $this->db->prepare("
-            SELECT id, address, lat, lng, trash_level
+            SELECT id, address, lat, lng, trash_level, temperature
             FROM bins
             WHERE trash_level >= ?
             ORDER BY trash_level DESC
@@ -64,7 +71,6 @@ class AnalyticsService
             WHERE table_name = 'history'
         ")->fetchAll(PDO::FETCH_COLUMN);
         
-        // Cherchons un nom de colonne qui pourrait correspondre à une date/heure
         $dateColumn = null;
         foreach ($columns as $column) {
             if (strpos($column, 'date') !== false) {
@@ -149,7 +155,7 @@ class AnalyticsService
     {
         $results = [];
         $fillRates = $this->getFillRateGrowth();
-        $bins = $this->db->query("SELECT id, address, trash_level FROM bins")->fetchAll(PDO::FETCH_ASSOC);
+        $bins = $this->db->query("SELECT id, address, trash_level, temperature FROM bins")->fetchAll(PDO::FETCH_ASSOC);
         
         foreach ($bins as $bin) {
             $binGrowth = 0;
@@ -211,6 +217,23 @@ class AnalyticsService
         });
         
         return $results;
+    }
+
+    /**
+     * Récupère les poubelles dont la température est supérieure à un seuil
+     * @param int $tempThreshold Seuil de température en degrés Celsius
+     * @return array
+     */
+    public function getBinsWithHighTemperature(int $tempThreshold = 50): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT id, address, lat, lng, trash_level, temperature
+            FROM bins
+            WHERE temperature >= ?
+            ORDER BY temperature DESC
+        ");
+        $stmt->execute([$tempThreshold]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -341,53 +364,6 @@ class AnalyticsService
     }
 
     /**
-     * Génération d'itinéraire simple (ancien algorithme) sans déchetterie
-     * @param array $bins Liste des poubelles à collecter
-     * @return array
-     */
-    private function generateSimpleRoute(array $bins): array
-    {
-        if (count($bins) <= 1) {
-            return $bins;
-        }
-        
-        $route = [];
-        $remaining = $bins;
-        
-        // Commencer par la première poubelle
-        $current = array_shift($remaining);
-        $route[] = $current;
-        
-        // Parcourir les poubelles restantes par proximité
-        while (count($remaining) > 0) {
-            $nearest = null;
-            $minDistance = PHP_FLOAT_MAX;
-            $nearestIndex = -1;
-            
-            for ($i = 0; $i < count($remaining); $i++) {
-                $distance = $this->calculateDistance(
-                    $current['lat'],
-                    $current['lng'],
-                    $remaining[$i]['lat'],
-                    $remaining[$i]['lng']
-                );
-                
-                if ($distance < $minDistance) {
-                    $minDistance = $distance;
-                    $nearest = $remaining[$i];
-                    $nearestIndex = $i;
-                }
-            }
-            
-            $route[] = $nearest;
-            $current = $nearest;
-            array_splice($remaining, $nearestIndex, 1);
-        }
-        
-        return $route;
-    }
-    
-    /**
      * Calcule la distance entre deux points géographiques
      * @return float Distance en kilomètres
      */
@@ -408,4 +384,66 @@ class AnalyticsService
         
         return $distance;
     }
+    
+    /**
+     * Récupère l'historique des températures pour une poubelle spécifique
+     * @param int $binId Id de la poubelle
+     * @param int $days Nombre de jours d'historique à récupérer (par défaut 30)
+     * @return array
+     */
+    public function getBinTemperatureHistory(int $binId, int $days = 30): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT 
+                h.date, 
+                h.temperature,
+                h.level as trash_level
+            FROM history h
+            WHERE h.id = ? AND h.date >= CURRENT_DATE - INTERVAL '$days days'
+            ORDER BY h.date ASC
+        ");
+        
+        $stmt->execute([$binId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Récupère l'historique des températures pour toutes les poubelles
+     * @param int $days Nombre de jours d'historique à récupérer (par défaut 30)
+     * @return array
+     */
+    public function getTemperatureHistory(int $days = 30): array
+    {
+        $stmt = $this->db->prepare("
+            WITH bin_temp_data AS (
+                SELECT 
+                    b.id,
+                    b.address,
+                    h.date,
+                    h.temperature,
+                    h.level as trash_level,
+                    RANK() OVER (PARTITION BY b.id ORDER BY h.date DESC) as date_rank
+                FROM bins b
+                JOIN history h ON b.id = h.id
+                WHERE h.date >= CURRENT_DATE - INTERVAL '$days days'
+                AND h.temperature IS NOT NULL
+            )
+            SELECT 
+                id,
+                address,
+                AVG(temperature) as avg_temperature,
+                MAX(temperature) as max_temperature,
+                MIN(temperature) as min_temperature,
+                MAX(CASE WHEN date_rank = 1 THEN temperature END) as latest_temperature,
+                AVG(trash_level) as avg_trash_level
+            FROM bin_temp_data
+            GROUP BY id, address
+            ORDER BY latest_temperature DESC
+        ");
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+  
 }

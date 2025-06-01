@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Fetch bin data from the API
-  fetch(`http://127.0.0.1:5000/bins/${binId}`)
+  fetch(`/api/bins/${binId}`)
     .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -138,19 +138,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     })
     .catch((error) => {
-      console.error("Error fetching bin data:", error);
       document.getElementById(
         "bin-info"
       ).innerHTML = `<p>Une erreur s'est produite lors du chargement des données.</p>`;
     });
 });
 
-// Add CSS for warning level
-const style = document.createElement("style");
-style.innerHTML = `
-  .warning {
-    color: red;
-    font-weight: bold;
-  }
-`;
-document.head.appendChild(style);
+// La classe warning est définie dans le CSS

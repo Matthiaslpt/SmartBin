@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./src:/var/www/html
+      - ./src:/var/www/src
       - ./vendor:/var/www/vendor
     depends_on:
       - php
@@ -16,10 +16,10 @@ services:
   php:
     build: ./docker/php
     volumes:
-      - ./src:/var/www/html
-      - ./:/var/www
+      - ./src:/var/www/src
+      - ./vendor:/var/www/vendor
       - ./.env:/var/www/.env
-    depends_on: 
+    depends_on:
       - postgres
     networks:
       - smartbin-network
@@ -32,8 +32,7 @@ services:
 
   postgres:
     image: postgres:15-alpine
-    ports:
-      - "5432:5432" # Port PostgreSQL
+    # En production, ne pas exposer le port PostgreSQL à l'extérieur
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql

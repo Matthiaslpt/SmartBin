@@ -50,6 +50,16 @@
                 {{ critical }}
             </div>
         </div>
+        
+        <div class="summary-card" style="{% if binsWithHighTemperature|length > 0 %}background-color: rgba(255, 245, 230, 0.8);{% endif %}">
+            <h3>Alerte température</h3>
+            <div class="summary-number" style="{% if binsWithHighTemperature|length > 0 %}color: #ff4d4d;{% endif %}">
+                {{ binsWithHighTemperature|length }}
+            </div>
+            {% if binsWithHighTemperature|length > 0 %}
+                <div style="color: #ff4d4d; font-weight: bold;">À vérifier</div>
+            {% endif %}
+        </div>
     </div>
     
     <div class="analytics-grid">
@@ -139,6 +149,49 @@
         <div class="analytics-card full-width">
             <h2>Taux de croissance quotidien</h2>
             <canvas id="growth-rate-chart"></canvas>
+        </div>
+    </div>
+    
+    <div class="analytics-grid">
+        <div class="analytics-card full-width">
+            <h2>Poubelles avec température élevées</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Adresse</th>
+                            <th>Température</th>
+                            <th>Niveau actuel</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bin in binsWithHighTemperature %}
+                            <tr class="{{ bin.temperature > 35 ? 'urgent' : '' }}">
+                                <td>{{ bin.id }}</td>
+                                <td>{{ bin.address }}</td>
+                                <td class="temperature-cell">
+                                    <span class="temperature-value" style="color: {{ bin.temperature > 35 ? '#ff4d4d' : bin.temperature > 32 ? '#ff9e4d' : '#ff774d' }}">
+                                        {{ bin.temperature }}°C
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: {{ bin.trash_level }}%; background-color: {{ bin.trash_level > 80 ? '#ff4d4d' : '#4caf50' }}"></div>
+                                        <span>{{ bin.trash_level }}%</span>
+                                    </div>
+                                </td>
+                                <td><a href="/bin?id={{ bin.id }}" class="details-link">Détails</a></td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="no-data">Aucune poubelle avec température élevée</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     

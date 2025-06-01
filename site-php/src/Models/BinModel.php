@@ -43,17 +43,27 @@ class BinModel
     public function getBinById(int $binId): ?array
     {
         try {
-            // Récupérer les informations de base de la poubelle
-            $stmtBin = $this->db->prepare("SELECT id, address, lat, lng, trash_level FROM bins WHERE id = ?");
+            // Récupérer les informations de base de la poubelle avec température
+            $stmtBin = $this->db->prepare("SELECT id, address, lat, lng, trash_level, temperature FROM bins WHERE id = ?");
             $stmtBin->execute([$binId]);
             $bin = $stmtBin->fetch(PDO::FETCH_ASSOC);
 
             if (!$bin) {
                 return null;
             }
+            
+            // Récupérer les températures min et max de l'historique
+            $stmtTemp = $this->db->prepare("SELECT MIN(temperature) as min_temp, MAX(temperature) as max_temp FROM history WHERE id = ? AND temperature IS NOT NULL");
+            $stmtTemp->execute([$binId]);
+            $tempData = $stmtTemp->fetch(PDO::FETCH_ASSOC);
+            
+            if ($tempData) {
+                $bin['min_temperature'] = $tempData['min_temp'];
+                $bin['max_temperature'] = $tempData['max_temp'];
+            }
 
             // Récupérer l'historique de la poubelle
-            $stmtHistory = $this->db->prepare("SELECT level, date FROM history WHERE id = ? ORDER BY date");
+            $stmtHistory = $this->db->prepare("SELECT level, temperature, date FROM history WHERE id = ? ORDER BY date");
             $stmtHistory->execute([$binId]);
             $historyRows = $stmtHistory->fetchAll(PDO::FETCH_ASSOC);
 
@@ -119,6 +129,83 @@ class BinModel
                 ON CONFLICT (id, date) DO UPDATE SET level = ?
             ");
             $stmtHistory->execute([$binId, $level, $dateToUse, $level]);
+            
+            $this->db->commit();
+            return true;
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+    
+    /**
+     * Met à jour la température d'une poubelle
+     * @param int $binId ID de la poubelle
+     * @param float $temperature Nouvelle température
+     * @param string|null $date Date de la mesure (format Y-m-d), utilise la date actuelle par défaut
+     * @return bool Succès ou échec de la mise à jour
+     */
+    public function updateBinTemperature(int $binId, float $temperature, string $date = null): bool
+    {
+        try {
+            $this->db->beginTransaction();
+            
+            // Mise à jour de la température dans la table bins
+            $stmtBin = $this->db->prepare("
+                UPDATE bins 
+                SET temperature = ?
+                WHERE id = ?
+            ");
+            $stmtBin->execute([$temperature, $binId]);
+            
+            // Insertion ou mise à jour dans l'historique
+            $dateToUse = $date ?? date('Y-m-d');
+            $stmtHistory = $this->db->prepare("
+                INSERT INTO history (id, temperature, date)
+                VALUES (?, ?, ?)
+                ON CONFLICT (id, date) 
+                DO UPDATE SET temperature = ?
+            ");
+            $stmtHistory->execute([$binId, $temperature, $dateToUse, $temperature]);
+            
+            $this->db->commit();
+            return true;
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+    
+    /**
+     * Met à jour à la fois le niveau et la température d'une poubelle
+     * @param int $binId ID de la poubelle
+     * @param int $level Nouveau niveau de remplissage
+     * @param float $temperature Nouvelle température
+     * @param string|null $date Date de la mesure (format Y-m-d), utilise la date actuelle par défaut
+     * @return bool Succès ou échec de la mise à jour
+     */
+    public function updateBinData(int $binId, int $level, float $temperature, string $date = null): bool
+    {
+        try {
+            $this->db->beginTransaction();
+            
+            // Mise à jour des données dans la table bins
+            $stmtBin = $this->db->prepare("
+                UPDATE bins 
+                SET trash_level = ?, temperature = ?
+                WHERE id = ?
+            ");
+            $stmtBin->execute([$level, $temperature, $binId]);
+            
+            // Insertion ou mise à jour dans l'historique
+            $dateToUse = $date ?? date('Y-m-d');
+            $stmtHistory = $this->db->prepare("
+                INSERT INTO history (id, level, temperature, date)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT (id, date) 
+                DO UPDATE SET level = ?, temperature = ?
+            ");
+            $stmtHistory->execute([$binId, $level, $temperature, $dateToUse, $level, $temperature]);
             
             $this->db->commit();
             return true;

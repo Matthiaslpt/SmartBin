@@ -34,15 +34,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return response.json();
     })
     .catch((error) => {
-      console.error("Error fetching bins:", error);
       return []; // Retourner un tableau vide en cas d'erreur
     })
     .then((bins) => {
-      console.log("Bins loaded:", bins); // Débogage
-
       // Vérifier que nous avons bien des poubelles
       if (!bins || bins.length === 0) {
-        console.warn("No bins returned from API");
         return;
       }
 
@@ -50,7 +46,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       bins.forEach((bin) => {
         if (!bin.lat || !bin.lng) {
-          console.warn("Bin without coordinates:", bin);
           return;
         }
 

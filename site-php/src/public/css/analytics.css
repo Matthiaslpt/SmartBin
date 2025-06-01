@@ -276,12 +276,8 @@ tr.waste-center-row td {
   font-weight: bold;
 }
 
-/* Masquer le conteneur d'instructions de Leaflet Routing Machine */
-.leaflet-routing-container {
-  display: none !important;
-}
-
-/* Assurer que l'icône du panneau d'instructions est également masquée */
+/* Masquer tous les éléments de routage de Leaflet */
+.leaflet-routing-container,
 .leaflet-routing-collapse-btn {
   display: none !important;
 }
@@ -335,6 +331,29 @@ tr.waste-center-row td {
 .leaflet-routing-line {
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
 }
+
+/* Styles pour la section des poubelles avec température élevée */
+.temperature-cell {
+  text-align: center;
+}
+
+.temperature-value {
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  background-color: rgba(255, 245, 230, 0.6);
+}
+
+tr.urgent {
+  background-color: rgba(255, 240, 240, 0.5);
+}
+
+tr.urgent:hover {
+  background-color: rgba(255, 230, 230, 0.7);
+}
+
+/* Styles pour les graphiques */
 
 /* Style pour les appareils mobiles */
 @media (max-width: 768px) {

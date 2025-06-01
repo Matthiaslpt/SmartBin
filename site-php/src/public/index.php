@@ -49,7 +49,33 @@ switch ($uri) {
     case (preg_match('/^\/api\/bins\/(\d+)$/', $uri, $matches) ? true : false):
         $binId = $matches[1];
         $controller = new \SmartBin\Controllers\BinController($twig);
-        $controller->getBinById($binId);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $controller->getBinById($binId);
+        }
+        break;
+    
+    case (preg_match('/^\/api\/bins\/(\d+)\/level$/', $uri, $matches) ? true : false):
+        $binId = $matches[1];
+        $controller = new \SmartBin\Controllers\BinController($twig);
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT' || $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateBinLevel($binId);
+        }
+        break;
+        
+    case (preg_match('/^\/api\/bins\/(\d+)\/temperature$/', $uri, $matches) ? true : false):
+        $binId = $matches[1];
+        $controller = new \SmartBin\Controllers\BinController($twig);
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT' || $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateBinTemperature($binId);
+        }
+        break;
+        
+    case (preg_match('/^\/api\/bins\/(\d+)\/data$/', $uri, $matches) ? true : false):
+        $binId = $matches[1];
+        $controller = new \SmartBin\Controllers\BinController($twig);
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT' || $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateBinData($binId);
+        }
         break;
     
     // Nouvelles routes pour l'analyse
@@ -87,6 +113,22 @@ switch ($uri) {
     case '/api/analytics/route':
         $controller = new \SmartBin\Controllers\AnalyticsController($twig);
         $controller->getOptimizedRouteApi();
+        break;
+        
+    // Nouvelles routes API pour les données de température
+    case '/api/analytics/temperature-history':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getTemperatureHistoryApi();
+        break;
+        
+    case '/api/analytics/bin-temperature-history':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getBinTemperatureHistoryApi();
+        break;
+        
+    case '/api/analytics/temperature-impact':
+        $controller = new \SmartBin\Controllers\AnalyticsController($twig);
+        $controller->getTemperatureImpactApi();
         break;
     
     default:

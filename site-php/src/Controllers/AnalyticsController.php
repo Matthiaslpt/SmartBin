@@ -22,12 +22,14 @@ class AnalyticsController
         $binsNeedingCollection = $this->analyticsService->getBinsNeedingCollection();
         $fillRateGrowth = $this->analyticsService->getFillRateGrowth();
         $predictedCriticalLevels = $this->analyticsService->predictCriticalLevels();
+        $binsWithHighTemperature = $this->analyticsService->getBinsWithHighTemperature(30);
         
         echo $this->twig->render('analytics/dashboard.twig', [
             'averageFillRates' => $averageFillRates,
             'binsNeedingCollection' => $binsNeedingCollection,
             'fillRateGrowth' => $fillRateGrowth,
-            'predictedCriticalLevels' => $predictedCriticalLevels
+            'predictedCriticalLevels' => $predictedCriticalLevels,
+            'binsWithHighTemperature' => $binsWithHighTemperature
         ]);
     }
 
@@ -75,5 +77,12 @@ class AnalyticsController
         $binsToCollect = $this->analyticsService->getBinsNeedingCollection($threshold);
         $route = $this->analyticsService->generateOptimizedRoute($binsToCollect);
         echo json_encode($route);
+    }
+
+    public function getBinsWithHighTemperatureApi(): void
+    {
+        header('Content-Type: application/json');
+        $tempThreshold = isset($_GET['threshold']) ? (int)$_GET['threshold'] : 30;
+        echo json_encode($this->analyticsService->getBinsWithHighTemperature($tempThreshold));
     }
 }

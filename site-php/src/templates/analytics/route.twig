@@ -217,19 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mettre à jour les statistiques
             document.getElementById('total-distance').innerText = (summary.totalDistance / 1000).toFixed(2) + ' km';
             document.getElementById('total-time').innerText = Math.round(summary.totalTime / 60) + ' min';
-            
-            // S'assurer que les éléments du panneau d'instructions sont bien supprimés
-            setTimeout(function() {
-                const routingContainer = document.querySelector('.leaflet-routing-container');
-                if (routingContainer) {
-                    routingContainer.style.display = 'none';
-                }
-                
-                const collapseBtn = document.querySelector('.leaflet-routing-collapse-btn');
-                if (collapseBtn) {
-                    collapseBtn.style.display = 'none';
-                }
-            }, 100);
         });
         
         // Si l'itinéraire ne peut pas être trouvé

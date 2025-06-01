@@ -1,17 +1,17 @@
 // Initialize the map
 document.addEventListener("DOMContentLoaded", function () {
-  // Définir les limites géographiques de la France 
-  const southWest = L.latLng(41.2, -5.5); 
-  const northEast = L.latLng(51.2, 9.8); 
+  // Définir les limites géographiques de la France
+  const southWest = L.latLng(41.2, -5.5);
+  const northEast = L.latLng(51.2, 9.8);
   const franceBounds = L.latLngBounds(southWest, northEast);
 
   // Initialiser la carte avec les restrictions
   const map = L.map("map", {
     zoomControl: false,
-    minZoom: 6, 
-    maxZoom: 18, 
-    maxBounds: franceBounds, 
-    maxBoundsViscosity: 1.0, 
+    minZoom: 6,
+    maxZoom: 18,
+    maxBounds: franceBounds,
+    maxBoundsViscosity: 1.0,
   }).setView([45.75, 4.85], 13);
 
   // Ajouter le contrôle de zoom en bas à droite
@@ -56,13 +56,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return [];
     })
     .then((bins) => {
-      console.log("Bins loaded:", bins); // Pour déboguer et voir les données
-
       allBins = bins;
       bins.forEach((bin) => {
         // Vérification des coordonnées valides
         if (!bin.lat || !bin.lng || isNaN(bin.lat) || isNaN(bin.lng)) {
-          console.warn(`Bin ${bin.id} has invalid coordinates:`, bin);
           return;
         }
 
@@ -72,10 +69,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Si les valeurs sont toujours invalides après conversion, ignorer
         if (isNaN(lat) || isNaN(lng)) {
-          console.warn(
-            `Bin ${bin.id} coordinates invalid after conversion:`,
-            bin
-          );
           return;
         }
 
@@ -105,20 +98,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Ajouter une classe pour identifier ce marqueur spécifique
         marker._icon.classList.add("bin-marker");
-        marker._icon.classList.add(`bin-marker-${bin.id}`);
-
-        // S'assurer que l'élément DOM du marqueur est correctement positionné
-        if (bin.id === 4) {
-          setTimeout(() => {
-            if (marker._icon) {
-              // Force un rafraîchissement du positionnement du marqueur
-              map.panBy([0, 0]);
-            }
-          }, 100);
-        }
       }
     })
-    .catch((error) => console.error("Error fetching bins:", error));
+    .catch((error) => {});
 
   // Handle search functionality
   const searchInput = document.getElementById("search-input");
@@ -168,7 +150,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         })
         .catch((error) => {
-          console.error("Erreur lors de la recherche d'adresse:", error);
           alert("Erreur lors de la recherche. Veuillez réessayer.");
         });
     }
@@ -213,11 +194,11 @@ document.addEventListener("DOMContentLoaded", function () {
             lat: lat,
             lng: lng,
             trash_level: trash_level,
-            history: {}, // Initialize with an empty history
+            history: [], // Initialize with an empty history array
           };
 
           // Send POST request to the API
-          return fetch("http://127.0.0.1:5000/bins", {
+          return fetch("/api/bins", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -246,17 +227,5 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-  // Add pulsing effect for CSS
-  const style = document.createElement("style");
-  style.innerHTML = `
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .pulse {
-            animation: pulse 1.5s infinite;
-        }
-    `;
-  document.head.appendChild(style);
+  // Animation est définie dans le CSS
 });
