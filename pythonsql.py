@@ -70,8 +70,8 @@ def add_row_to_history(bin_id, bin_level, bin_date, bin_temp, bin_humidity):
 
 def send_sms_notification(bin_id, temperature, date):
     try:
-        account_sid = 'AC636735b3ca02b78c28504c84767b3c63'
-        auth_token = '5dd175555db8313ffa21f7dcc5817368'
+        account_sid = ''
+        auth_token = ''
         messaging_service_sid = 'MG1bb0c94046d2c13602d184079a6cf5ae'
         to_number = '+33769048181'
 
