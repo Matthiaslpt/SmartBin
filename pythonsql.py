@@ -5,7 +5,7 @@ import serial
 import time
 from twilio.rest import Client
 
-
+# -------------------- Introduction --------------------
 
 print(r"""
   _________                      __ ___     __        
@@ -15,11 +15,11 @@ print(r"""
 /_______  /__|_|  (____  /__|   |__| |___  /__|___|  /
         \/      \/     \/                \/        \/ 
 """)
-
 print("🗑️  Smart Bin Terminal - Initializing...\n")
 
 
-# Connexion à PostgreSQL
+# -------------------- PostgreSQL --------------------
+
 def connect_to_postgresql():
     try:
         connection = psycopg2.connect(
@@ -36,7 +36,7 @@ def connect_to_postgresql():
         print(f"❌ Erreur de connexion PostgreSQL : {error}")
         return None, None
 
-# Fermeture de la connexion
+
 def close_connection(connection, cursor):
     if cursor:
         cursor.close()
@@ -44,7 +44,7 @@ def close_connection(connection, cursor):
         connection.close()
         print("🔒 Connexion PostgreSQL fermée.")
 
-# Insertion dans la table history
+
 def add_row_to_history(bin_id, bin_level, bin_date, bin_temp, bin_humidity):
     conn, cur = connect_to_postgresql()
     if conn and cur:
@@ -55,10 +55,40 @@ def add_row_to_history(bin_id, bin_level, bin_date, bin_temp, bin_humidity):
             """, (bin_id, bin_level*100, bin_date, bin_temp, bin_humidity))
             conn.commit()
             print(f"✅ Données insérées : id={bin_id}, niveau={bin_level*100}, temp={bin_temp}, humid={bin_humidity}")
+
+            # Envoi d'un SMS si température critique
+            if bin_temp >= 50:
+                send_sms_notification(bin_id, bin_temp, bin_date)
+
         except Exception as e:
             print(f"❌ Erreur d'insertion : {e}")
         finally:
             close_connection(conn, cur)
+
+
+# -------------------- Envoi SMS Twilio --------------------
+
+def send_sms_notification(bin_id, temperature, date):
+    try:
+        account_sid = 'AC636735b3ca02b78c28504c84767b3c63'
+        auth_token = '5dd175555db8313ffa21f7dcc5817368'
+        messaging_service_sid = 'MG1bb0c94046d2c13602d184079a6cf5ae'
+        to_number = '+33769048181'
+
+        client = Client(account_sid, auth_token)
+
+        message = client.messages.create(
+            messaging_service_sid=messaging_service_sid,
+            body=f"⚠️ Alerte SmartBin\nID: {bin_id} | Température: {temperature}°C\nDate: {date}",
+            to=to_number
+        )
+
+        print("📲 SMS envoyé :", message.sid)
+
+    except Exception as e:
+        print("❌ Échec de l'envoi du SMS :", e)
+
+# -------------------- Lecture Port Série --------------------
 
 def read_from_serial(port='/dev/ttyUSB0', baudrate=115200):
     taillemax = 200
@@ -73,18 +103,15 @@ def read_from_serial(port='/dev/ttyUSB0', baudrate=115200):
                     continue
                 print(f"📥 Reçu: {line}")
 
-                # On ne garde que les lignes utiles
                 if line.startswith("id") or line.startswith("temp"):
                     buffer.append(line)
 
-                # On attend un couple id/temp (puisque Etat n'est plus toujours là)
                 while len(buffer) >= 2:
                     if buffer[0].startswith("id") and buffer[1].startswith("temp"):
                         try:
                             line1 = buffer.pop(0)
                             line2 = buffer.pop(0)
 
-                            # Extraction des données
                             bin_id = int(line1.split(';')[0].split(':')[1].strip())
                             level = float(line1.split(';')[1].split(':')[1].replace('cm','').strip())
                             level = level / taillemax
@@ -108,29 +135,9 @@ def read_from_serial(port='/dev/ttyUSB0', baudrate=115200):
         print(f"❌ Impossible d'ouvrir le port série : {e}")
 
 
+# -------------------- Exécution principale --------------------
 
-
-def send_sms_notification():
-    # Configuration de Twilio
-    # Remplacez par vos identifiants Twilio
-    account_sid = 'votre_account_sid'
-    auth_token = 'votre_auth_token'
-
-    client = Client(account_sid, auth_token)
-
-    message = client.messages.create(
-        body="⚠️ SmartBin : Température > 50°C détectée !",
-        from_='+1234567890',  # Numéro Twilio
-        to='+33612345678'     # Numéro cible
-    )
-
-    print("Message envoyé :", message.sid)
-
-
-# Lancer le script
 if __name__ == "__main__":
-    read_from_serial()
-
-
-
-
+    print("🔄 Démarrage de la lecture du port série...")
+    read_from_serial(port='/dev/ttyUSB0', baudrate=115200)
+    print("🔚 Fin de la lecture du port série.")
